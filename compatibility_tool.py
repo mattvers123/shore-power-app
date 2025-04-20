@@ -1,20 +1,37 @@
 import streamlit as st
 
-st.title("Shore Power Compatibility Analyzer")
+# --- Mapping umbrella cases to use cases ---
+use_case_options = {
+    "Umbrella 1: Charging anchored ships and charging barge from offshore plants": [
+        "UC1: Anchored Vessels",
+        "UC4: Marine Protected Areas (MPAs)",
+        "UC5: Charging small transport vessels",
+        "UC6: Leisure boats",
+        "UC8: Charging from offshore wind farms",
+        "UC10: Charging BlueBARGE from anchored vessels"
+    ],
+    "Umbrella 2: Barge as OPS (Onshore Power Supply) for moored vessels": [
+        "UC2: Moored Vessels"
+    ],
+    "Umbrella 3: From barge to land and offshore structures": [
+        "UC3: Isolated inhabited areas",
+        "UC7: Offshore platforms – oil rigs",
+        "UC9: Power to land after disasters"
+    ]
+}
 
-# Step 1: Select application
-application = st.selectbox("Select Application", ["Ship", "Island", "Disaster Relief", "Offshore Platform"])
+# --- Sidebar for navigation ---
+st.sidebar.title("Use Case Selection")
+umbrella = st.sidebar.selectbox("Select Umbrella Case", list(use_case_options.keys()))
+use_case = st.sidebar.selectbox("Select Specific Use Case", use_case_options[umbrella])
 
-# Step 2: Define power demand
-st.header("Power Requirements")
-power_kw = st.number_input("Total Power Demand (kW)", min_value=0)
+# --- Main display ---
+st.title("Shore Power Compatibility Analysis")
 
-# Conditional inputs based on app
-if application == "Ship":
-    st.subheader("Ship-specific Inputs")
-    voltage = st.selectbox("Voltage Level", ["440V", "6.6kV", "11kV"])
-    freq = st.selectbox("Frequency", ["50 Hz", "60 Hz"])
+st.subheader("Selected Umbrella Case:")
+st.markdown(f"**{umbrella}**")
 
-# Placeholder for compatibility output
-if st.button("Analyze Compatibility"):
-    st.success("Analysis complete! (placeholder)")
+st.subheader("Selected Use Case:")
+st.markdown(f"**{use_case}**")
+
+st.info("Inputs and analysis will be displayed here based on the selected use case.")
