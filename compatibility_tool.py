@@ -47,3 +47,34 @@ if not desc_row.empty:
 else:
     st.warning("Description not found.")
 
+if use_case == "UC1: Anchored Vessels":
+    st.subheader("Anchored Ship Power Demand Lookup")
+
+    # Load the correct worksheet
+    try:
+        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Power Demand at Anchorage")
+        ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+    except Exception as e:
+        st.error(f"Failed to load ship demand data: {e}")
+        ship_demand_df = None
+
+    if ship_demand_df is not None:
+        ship_type = st.selectbox("Select Ship Type at Anchorage", ship_demand_df["ship_type"].unique())
+
+        selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
+
+        st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
+        st.markdown(f"**Power Demand (MW):**")
+        st.write(f"• IMO: `{selected['power_imo_mw']}`")
+        st.write(f"• EMSA: `{selected['power_emsa_mw']}`")
+        st.write(f"• Load Factor: `{selected['power_lf_mw']}`")
+
+        st.markdown(f"**Energy Demand (MWh):**")
+        st.write(f"• IMO: `{selected['energy_imo_mwh']}`")
+        st.write(f"• EMSA: `{selected['energy_emsa_mwh']}`")
+        st.write(f"• Load Factor: `{selected['energy_lf_mwh']}`")
+
+        st.markdown("---")
+        st.markdown(f"**Total Annual Energy Demand (GWh)**: `{selected['total_annual_energy_gwh']}`")
+
+
