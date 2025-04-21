@@ -16,6 +16,9 @@ with open("bluebarge-logo-white.svg", "r") as f:
     svg_logo = f.read()
 
 st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
+#############################compatibility analysis status###
+if "show_analysis" not in st.session_state:
+    st.session_state.show_analysis = Fals
 
 # Step 1: Load the service account JSON from secrets
 gcp_secrets = st.secrets["gcp_service_account"]
@@ -38,12 +41,9 @@ data = pd.DataFrame(sheet.get_all_records())
 # Sidebar inputs
 
 # Sidebar: Compatibility button
-if "show_analysis" not in st.session_state:
-    st.session_state.show_analysis = False
-
 if st.sidebar.button("🔍 Compatibility Analysis"):
     st.session_state.show_analysis = True
-    st.experimental_rerun()
+    st.stop()
 
 # ✅ Page routing
 if st.session_state.show_analysis:
