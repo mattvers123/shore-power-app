@@ -44,7 +44,7 @@ if "show_analysis" not in st.session_state:
 # Sidebar: Compatibility button
 if st.sidebar.button("🔍 Compatibility Analysis"):
     st.session_state.show_analysis = True
-    st.stop()
+    st.rerun()
 
 # ✅ Page routing
 if st.session_state.show_analysis:
