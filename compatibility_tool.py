@@ -40,6 +40,16 @@ import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
+import json
+import tempfile
+
+# Step 1: Load the service account JSON from secrets
+gcp_secrets = st.secrets["gcp_service_account"]
+
+# Step 2: Save to a temporary JSON file
+with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
+    json.dump(dict(gcp_secrets), tmp)
+    tmp_path = tmp.name
 
 # Setup Google Sheets connection
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
