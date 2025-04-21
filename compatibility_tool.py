@@ -48,7 +48,8 @@ gcp_secrets = st.secrets["gcp_service_account"]
 
 # Step 2: Save to a temporary JSON file
 with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
-    json.dump(dict(gcp_secrets), tmp)
+    gcp_secrets = {k: v for k, v in st.secrets["gcp_service_account"].items()}
+    json.dump(gcp_secrets, tmp)
     tmp_path = tmp.name
 
 # Setup Google Sheets connection
