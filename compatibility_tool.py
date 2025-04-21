@@ -16,9 +16,6 @@ with open("bluebarge-logo-white.svg", "r") as f:
     svg_logo = f.read()
 
 st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
-#############################compatibility analysis status###
-if "show_analysis" not in st.session_state:
-    st.session_state.show_analysis = False
 
 # Step 1: Load the service account JSON from secrets
 gcp_secrets = st.secrets["gcp_service_account"]
