@@ -77,6 +77,62 @@ if use_case == "UC1: Anchored Vessels":
         st.write(f"• Load Factor: `{selected['energy_lf_mwh']}`")
 
         st.markdown("---")
-       
+    import matplotlib.pyplot as plt
+    import numpy as np
 
+    # Radio button to select the metric
+    metric = st.radio("Select Metric to Compare", [
+        "Anchorage Time (h)",
+        "Number of Port Calls",
+        "Power Demand (MW)",
+        "Energy Demand (MWh)"
+    ])
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    x = np.arange(len(ship_demand_df))
+    bar_labels = ship_demand_df["ship_type"]
+    highlight_color = "#FF5733"
+    default_color = "#AAAAAA"
+
+    if metric == "Anchorage Time (h)":
+        values = ship_demand_df["avg_time_h"]
+        bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+        ax.bar(x, values, color=bar_colors)
+        ax.set_ylabel("Hours")
+        ax.set_title("Average Anchorage Time by Ship Type")
+
+    elif metric == "Number of Port Calls":
+        values = ship_demand_df["port_calls"]
+        bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+        ax.bar(x, values, color=bar_colors)
+        ax.set_ylabel("Port Calls")
+        ax.set_title("Number of Port Calls by Ship Type")
+
+    elif metric == "Power Demand (MW)":
+        methods = ["power_imo_mw", "power_emsa_mw", "power_lf_mw"]
+        width = 0.25
+        for i, method in enumerate(methods):
+            values = ship_demand_df[method]
+            colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+            ax.bar(x + (i - 1)*width, values, width, label=method.replace("power_", "").replace("_mw", "").upper(), color=colors)
+        ax.set_ylabel("MW")
+        ax.set_title("Power Demand by Ship Type and Method")
+        ax.legend()
+
+    elif metric == "Energy Demand (MWh)":
+        methods = ["energy_imo_mwh", "energy_emsa_mwh", "energy_lf_mwh"]
+        width = 0.25
+        for i, method in enumerate(methods):
+            values = ship_demand_df[method]
+            colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+            ax.bar(x + (i - 1)*width, values, width, label=method.replace("energy_", "").replace("_mwh", "").upper(), color=colors)
+        ax.set_ylabel("MWh")
+        ax.set_title("Energy Demand by Ship Type and Method")
+        ax.legend()
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(ship_demand_df["ship_type"], rotation=15)
+    st.pyplot(fig)
+
+    
 
