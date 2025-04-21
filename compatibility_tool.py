@@ -7,7 +7,11 @@ import json
 import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
-####logo###########################33
+
+######pagew laput wide##########
+st.set_page_config(layout="wide")
+
+####logo###########################
 with open("bluebarge-logo-white.svg", "r") as f:
     svg_logo = f.read()
 
