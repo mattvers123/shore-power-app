@@ -40,6 +40,10 @@ data = pd.DataFrame(sheet.get_all_records())
 
 # Sidebar inputs
 
+############################compatibility analysis status###
+if "show_analysis" not in st.session_state:
+    st.session_state.show_analysis = False
+
 # Sidebar: Compatibility button
 if st.sidebar.button("🔍 Compatibility Analysis"):
     st.session_state.show_analysis = True
