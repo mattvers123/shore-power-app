@@ -47,6 +47,18 @@ use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].uni
 
 if st.sidebar.button("🔍 Compatibility Analysis"):
     st.session_state.show_analysis = True
+####compatibility analysis page visible#####################
+if st.session_state.show_analysis:
+    st.title("⚙️ Compatibility Analysis Panel")
+    st.markdown("Here we'll compare ship, port, and barge data to compute a compatibility score.")
+
+    # Later: add dropdowns to select UC, barge type, port
+    # Pull data from lookup tables
+    # Run scoring logic
+else:
+    # Show your main UC selection interface
+    # This is your current app UI
+
 
 # Main output
 st.title("Shore Power Compatibility Analysis")
