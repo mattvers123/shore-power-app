@@ -58,7 +58,7 @@ if st.session_state.show_analysis:
 else:
     # Show your main UC selection interface
     # This is your current app UI
-
+    st.title("🔌 BlueBARGE Compatibility Tool")
 
 # Main output
 st.title("Shore Power Compatibility Analysis")
