@@ -5,6 +5,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 import pandas as pd
 import json
 import tempfile
+####logo###########################33
+with open("bluebarge-logo-white.svg", "r") as f:
+    svg_logo = f.read()
+
+st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
 
 # Step 1: Load the service account JSON from secrets
 gcp_secrets = st.secrets["gcp_service_account"]
