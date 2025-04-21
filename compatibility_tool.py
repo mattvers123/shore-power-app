@@ -54,7 +54,7 @@ with tempfile.NamedTemporaryFile(mode="w",delete=False, suffix=".json") as tmp:
 
 # Setup Google Sheets connection
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("my-project-web-novosim-8ce6158fd7b6.json.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(tmp_path, scope)
 client = gspread.authorize(creds)
 
 # Open the sheet
