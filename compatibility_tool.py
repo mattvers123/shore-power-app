@@ -41,6 +41,9 @@ umbrella = st.sidebar.selectbox("Select Umbrella Case", data["umbrella_name"].un
 filtered = data[data["umbrella_name"] == umbrella]
 use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].unique())
 
+if st.sidebar.button("🔍 Compatibility Analysis"):
+    st.session_state.show_analysis = True
+
 # Main output
 st.title("Shore Power Compatibility Analysis")
 st.subheader(f"Umbrella Case: {umbrella}")
