@@ -24,7 +24,7 @@ use_case_options = {
 st.sidebar.title("Use Case Selection")
 umbrella = st.sidebar.selectbox("Select Umbrella Case", list(use_case_options.keys()))
 use_case = st.sidebar.selectbox("Select Specific Use Case", use_case_options[umbrella])
-'''
+
 # --- Main display ---
 st.title("Shore Power Compatibility Analysis")
 
@@ -35,6 +35,7 @@ st.subheader("Selected Use Case:")
 st.markdown(f"**{use_case}**")
 
 st.info("Inputs and analysis will be displayed here based on the selected use case.")
+'''
 ############read from google sheets###########################################
 import streamlit as st
 import gspread
@@ -62,15 +63,15 @@ sheet = client.open("Bluebarge_Comp_Texts").sheet1  # or .worksheet("Sheet1")
 data = pd.DataFrame(sheet.get_all_records())
 
 # Sidebar inputs
-#st.sidebar.title("Use Case Selection")
-#umbrella = st.sidebar.selectbox("Select Umbrella Case", data["umbrella_name"].unique())
-#filtered = data[data["umbrella_name"] == umbrella]
-#use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].unique())
+st.sidebar.title("Use Case Selection")
+umbrella = st.sidebar.selectbox("Select Umbrella Case", data["umbrella_name"].unique())
+filtered = data[data["umbrella_name"] == umbrella]
+use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].unique())
 
 # Main output
-#st.title("Shore Power Compatibility Analysis")
-#st.subheader(f"Umbrella Case: {umbrella}")
-#st.subheader(f"Use Case: {use_case}")
+st.title("Shore Power Compatibility Analysis")
+st.subheader(f"Umbrella Case: {umbrella}")
+st.subheader(f"Use Case: {use_case}")
 
 # Fetch description
 desc_row = data[(data["umbrella_name"] == umbrella) & (data["use_case_name"] == use_case)]
