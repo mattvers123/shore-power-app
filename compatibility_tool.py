@@ -36,6 +36,10 @@ sheet = client.open("Bluebarge_Comp_Texts").sheet1  # or .worksheet("Sheet1")
 data = pd.DataFrame(sheet.get_all_records())
 
 # Sidebar inputs
+
+if "show_analysis" not in st.session_state:
+    st.session_state.show_analysis = False
+    
 st.sidebar.title("Use Case Selection")
 umbrella = st.sidebar.selectbox("Select Umbrella Case", data["umbrella_name"].unique())
 filtered = data[data["umbrella_name"] == umbrella]
