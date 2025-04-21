@@ -53,7 +53,7 @@ if st.session_state.show_analysis:
 
     if st.button("⬅️ Back to Use Case Selection"):
         st.session_state.show_analysis = False
-        st.experimental_rerun()
+        st.rerun()
 
     # Placeholder for scoring UI
     st.write("Scoring UI coming soon...")
