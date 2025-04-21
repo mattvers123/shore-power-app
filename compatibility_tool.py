@@ -109,7 +109,7 @@ if use_case == "UC1: Anchored Vessels":
             ax.set_title("Average Anchorage Time by Ship Type")
 
         elif metric == "Number of Port Calls":
-            values = ship_demand_df["port_calls"]
+            values = ship_demand_df["port_calls (no.)"]
             bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
             ax.bar(x, values, color=bar_colors)
             ax.set_ylabel("Port Calls")
