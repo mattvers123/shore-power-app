@@ -98,8 +98,8 @@ if use_case == "UC1: Anchored Vessels":
         fig, ax = plt.subplots(figsize=(10, 5))
         x = np.arange(len(ship_demand_df))
         bar_labels = ship_demand_df["ship_type"]
-        #highlight_color = "#FF5733"
-        #default_color = "#AAAAAA"
+        highlight_color = "#FF5733"
+        default_color = "#AAAAAA"
 
         method_colors = {
             "IMO": "#1f77b4",   # blue
