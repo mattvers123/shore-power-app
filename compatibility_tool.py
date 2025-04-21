@@ -75,6 +75,6 @@ if use_case == "UC1: Anchored Vessels":
         st.write(f"• Load Factor: `{selected['energy_lf_mwh']}`")
 
         st.markdown("---")
-        st.markdown(f"**Total Annual Energy Demand (GWh)**: `{selected['total_annual_energy_gwh']}`")
+       
 
 
