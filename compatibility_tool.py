@@ -35,3 +35,36 @@ st.subheader("Selected Use Case:")
 st.markdown(f"**{use_case}**")
 
 st.info("Inputs and analysis will be displayed here based on the selected use case.")
+############read from google sheets###########################################
+import streamlit as st
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+
+# Setup Google Sheets connection
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("streamlit-sheets-access.json", scope)
+client = gspread.authorize(creds)
+
+# Open the sheet
+sheet = client.open("YOUR_GOOGLE_SHEET_NAME").sheet1  # or .worksheet("Sheet1")
+data = pd.DataFrame(sheet.get_all_records())
+
+# Sidebar inputs
+st.sidebar.title("Use Case Selection")
+umbrella = st.sidebar.selectbox("Select Umbrella Case", data["umbrella_name"].unique())
+filtered = data[data["umbrella_name"] == umbrella]
+use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].unique())
+
+# Main output
+st.title("Shore Power Compatibility Analysis")
+st.subheader(f"Umbrella Case: {umbrella}")
+st.subheader(f"Use Case: {use_case}")
+
+# Fetch description
+desc_row = data[(data["umbrella_name"] == umbrella) & (data["use_case_name"] == use_case)]
+if not desc_row.empty:
+    st.markdown(f"**Description:**\n\n{desc_row.iloc[0]['description']}")
+else:
+    st.warning("Description not found.")
+
