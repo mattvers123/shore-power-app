@@ -52,7 +52,7 @@ if use_case == "UC1: Anchored Vessels":
 
     # Load the correct worksheet
     try:
-        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Power Demand at Anchorage")
+        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
         ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
     except Exception as e:
         st.error(f"Failed to load ship demand data: {e}")
