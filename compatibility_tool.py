@@ -1,5 +1,5 @@
 import streamlit as st
-
+'''
 # --- Mapping umbrella cases to use cases ---
 use_case_options = {
     "Umbrella 1: Charging anchored ships and charging barge from offshore plants": [
@@ -24,7 +24,7 @@ use_case_options = {
 st.sidebar.title("Use Case Selection")
 umbrella = st.sidebar.selectbox("Select Umbrella Case", list(use_case_options.keys()))
 use_case = st.sidebar.selectbox("Select Specific Use Case", use_case_options[umbrella])
-
+'''
 # --- Main display ---
 st.title("Shore Power Compatibility Analysis")
 
