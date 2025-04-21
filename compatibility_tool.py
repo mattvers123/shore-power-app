@@ -65,7 +65,7 @@ if use_case == "UC1: Anchored Vessels":
 
         selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
 
-        col1, col2 = st.columns([1, 1])  # You can adjust ratio if needed
+        col1, col2 = st.columns([1, 1.4])  # You can adjust ratio if needed
     with col1:
         
         st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
@@ -98,9 +98,16 @@ if use_case == "UC1: Anchored Vessels":
         fig, ax = plt.subplots(figsize=(10, 5))
         x = np.arange(len(ship_demand_df))
         bar_labels = ship_demand_df["ship_type"]
-        highlight_color = "#FF5733"
-        default_color = "#AAAAAA"
+        #highlight_color = "#FF5733"
+        #default_color = "#AAAAAA"
 
+        method_colors = {
+            "IMO": "#1f77b4",   # blue
+            "EMSA": "#2ca02c",  # green
+            "LF": "#d62728"     # red
+        }
+        width = 0.25
+        
         if metric == "Anchorage Time (h)":
             values = ship_demand_df["avg_time_h"]
             bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
@@ -108,31 +115,44 @@ if use_case == "UC1: Anchored Vessels":
             ax.set_ylabel("Hours")
             ax.set_title("Average Anchorage Time by Ship Type")
 
-        elif metric == "Number of Port Calls":
-            values = ship_demand_df["port_calls (no.)"]
-            bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
-            ax.bar(x, values, color=bar_colors)
-            ax.set_ylabel("Port Calls")
-            ax.set_title("Number of Port Calls by Ship Type")
-
         elif metric == "Power Demand (MW)":
             methods = ["power_imo_mw", "power_emsa_mw", "power_lf_mw"]
-            width = 0.25
+
             for i, method in enumerate(methods):
+                label = method.split("_")[1].upper()
                 values = ship_demand_df[method]
-                colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
-                ax.bar(x + (i - 1)*width, values, width, label=method.replace("power_", "").replace("_mw", "").upper(), color=colors)
+                bar_colors = []
+                for idx, s in enumerate(ship_demand_df["ship_type"]):
+                    alpha = 1.0 if s == ship_type else 0.3
+                    bar_colors.append(method_colors[label])
+                bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
+                bars = ax.bar(x + (i - 1)*width, values, width, label=label,
+                              color=method_colors[label], alpha=0.8)
+                # Apply transparency per bar
+                for bar, alpha in zip(bars, bar_alphas):
+                    bar.set_alpha(alpha)
+
             ax.set_ylabel("MW")
             ax.set_title("Power Demand by Ship Type and Method")
             ax.legend()
 
         elif metric == "Energy Demand (MWh)":
             methods = ["energy_imo_mwh", "energy_emsa_mwh", "energy_lf_mwh"]
-            width = 0.25
+
             for i, method in enumerate(methods):
+                label = method.split("_")[1].upper()
                 values = ship_demand_df[method]
-                colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
-                ax.bar(x + (i - 1)*width, values, width, label=method.replace("energy_", "").replace("_mwh", "").upper(), color=colors)
+                bar_colors = []
+                for idx, s in enumerate(ship_demand_df["ship_type"]):
+                    alpha = 1.0 if s == ship_type else 0.3
+                    bar_colors.append(method_colors[label])
+                bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
+                bars = ax.bar(x + (i - 1)*width, values, width, label=label,
+                              color=method_colors[label], alpha=0.8)
+                for bar, alpha in zip(bars, bar_alphas):
+                    bar.set_alpha(alpha)
+
+
             ax.set_ylabel("MWh")
             ax.set_title("Energy Demand by Ship Type and Method")
             ax.legend()
