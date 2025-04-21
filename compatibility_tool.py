@@ -173,6 +173,7 @@ else:
 
                 ax.set_xticks(x)
                 ax.set_xticklabels(ship_demand_df["ship_type"], rotation=15)
+		ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
                 st.pyplot(fig)
 
 	
