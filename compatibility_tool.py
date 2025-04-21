@@ -64,7 +64,7 @@ if use_case == "UC1: Anchored Vessels":
         selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
 
         st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
-        st.markdown(f"**Total Number of Calls**: `{selected['port_calls (no.)']} no.`")
+        st.markdown(f"**Total Number of Calls**: `{selected['port_calls (no.)']} `")
         
         st.markdown(f"**Power Demand (MW):**")
         st.write(f"• IMO: `{selected['power_imo_mw']}`")
