@@ -119,6 +119,7 @@ else:
 
                 fig, ax = plt.subplots(figsize=(15, 10))
                 x = np.arange(len(ship_demand_df))
+		ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
                 bar_labels = ship_demand_df["ship_type"]
                 highlight_color = "#FF5733"
                 default_color = "#AAAAAA"
@@ -173,7 +174,6 @@ else:
 
                 ax.set_xticks(x)
                 ax.set_xticklabels(ship_demand_df["ship_type"], rotation=15)
-		ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
                 st.pyplot(fig)
 
 	
