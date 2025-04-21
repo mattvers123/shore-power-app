@@ -65,7 +65,7 @@ if use_case == "UC1: Anchored Vessels":
 
         selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
 
-        col1, col2 = st.columns([1, 1.4])  # You can adjust ratio if needed
+        col1, col2 = st.columns([1, 1.5])  # You can adjust ratio if needed
     with col1:
         
         st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
@@ -84,8 +84,6 @@ if use_case == "UC1: Anchored Vessels":
         st.markdown("---")
 
     with col2:
-    
-    
         st.markdown("### Comparison Chart")
         # Radio button to select the metric
         metric = st.radio("Select Metric to Compare", [
