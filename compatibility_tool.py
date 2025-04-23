@@ -119,9 +119,6 @@ if st.session_state.show_analysis:
     	total_score = score_df["Match (%)"].mean()
     	st.success(f"🔢 **Total Compatibility Score:** {total_score:.1f} / 100")
 
-
-
-
 	
     # --- Load editable parameters from Google Sheet -- 
     try:
