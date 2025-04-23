@@ -52,8 +52,8 @@ if st.session_state.show_analysis:
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
 
-    st.subheader("🧪 Try a Compatibility Match (Sample)")
-
+    with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
+    
 	# Simulated data
 	uc_demand = {
 	    "required_power_mw": 5.0,
