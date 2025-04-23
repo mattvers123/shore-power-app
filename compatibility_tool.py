@@ -57,10 +57,13 @@ if st.session_state.show_analysis:
     	param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     	param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
-    	editable_params = param_config_df[param_config_df["Editable"].astype(str).str.upper() == "TRUE"]
+    	#editable_params = param_config_df[param_config_df["Editable"].astype(str).str.upper() == "TRUE"]
 
-    	st.subheader("🛠 Editable Compatibility Parameters")
-    	st.dataframe(editable_params)
+    	#st.subheader("🛠 Editable Compatibility Parameters")
+    	#st.dataframe(editable_params)
+	st.subheader("📋 All Compatibility Parameters")
+	st.dataframe(param_config_df)
+
 
     except Exception as e:
     	st.warning(f"Could not load editable parameter definitions: {e}")
