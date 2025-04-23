@@ -52,8 +52,8 @@ if st.session_state.show_analysis:
     
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
-    # --- Load editable parameters from Google Sheet ---
-	try:
+    # --- Load editable parameters from Google Sheet -- 
+    try:
     	param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     	param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
@@ -62,7 +62,7 @@ if st.session_state.show_analysis:
     	st.subheader("🛠 Editable Compatibility Parameters")
     	st.dataframe(editable_params)
 
-	except Exception as e:
+    except Exception as e:
     	st.warning(f"Could not load editable parameter definitions: {e}")
 
     if st.button("⬅️ Back to Use Case Selection"):
