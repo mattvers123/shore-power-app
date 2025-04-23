@@ -51,6 +51,81 @@ if st.session_state.show_analysis:
 	
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
+
+    st.subheader("🧪 Try a Compatibility Match (Sample)")
+
+	# Simulated data
+	uc_demand = {
+	    "required_power_mw": 5.0,
+	    "required_energy_mwh": 40,
+	    "required_standard": "IEC 80005-3",
+	    "required_voltage": "HV"
+	}
+
+	barge = {
+	    "power_mw": 6.5,
+	    "energy_mwh": 30,
+	    "standards": ["IEC 80005-3"],
+	    "voltage_levels": ["LV"],
+	}
+	
+	# Manual input for soft parameter
+	user_operational_fit = st.slider("Operational Fit (0 = poor, 1 = perfect)", 0.0, 1.0, 0.7)
+
+	# Calculate scores
+	def scaled_score(barge_val, required_val):
+	    if required_val == 0:
+	        return 0
+	    return min((barge_val / required_val), 1.0) * 100
+	
+	def binary_score(barge_val, required_val):
+	    return 100 if required_val in barge_val else 0
+	
+	# Match scoring
+	score_data = [
+	    {
+	        "Factor": "Power Capacity",
+	        "Match (%)": scaled_score(barge["power_mw"], uc_demand["required_power_mw"]),
+	        "Barge Value": f"{barge['power_mw']} MW",
+	        "UC Requirement": f"{uc_demand['required_power_mw']} MW"
+	    },
+	    {
+	        "Factor": "Energy Autonomy",
+	        "Match (%)": scaled_score(barge["energy_mwh"], uc_demand["required_energy_mwh"]),
+	        "Barge Value": f"{barge['energy_mwh']} MWh",
+	        "UC Requirement": f"{uc_demand['required_energy_mwh']} MWh"
+	    },
+	    {
+	        "Factor": "Standards Compliance",
+	        "Match (%)": binary_score(barge["standards"], uc_demand["required_standard"]),
+	        "Barge Value": ", ".join(barge["standards"]),
+	        "UC Requirement": uc_demand["required_standard"]
+	    },
+	    {
+	        "Factor": "HV/LV Match",
+	        "Match (%)": binary_score(barge["voltage_levels"], uc_demand["required_voltage"]),
+	        "Barge Value": ", ".join(barge["voltage_levels"]),
+	        "UC Requirement": uc_demand["required_voltage"]
+	    },
+	    {
+	        "Factor": "Operational Fit (user-rated)",
+	        "Match (%)": user_operational_fit * 100,
+	        "Barge Value": f"{user_operational_fit:.2f}",
+	        "UC Requirement": "User-defined"
+	    }
+	]
+	
+	score_df = pd.DataFrame(score_data)
+	st.table(score_df)
+	
+	# Total weighted score (simple equal weight for now)
+	total_score = score_df["Match (%)"].mean()
+	st.success(f"🔢 **Total Compatibility Score:** {total_score:.1f} / 100")
+
+
+
+
+	
     # --- Load editable parameters from Google Sheet -- 
     try:
     	param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
