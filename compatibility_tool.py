@@ -53,9 +53,7 @@ if st.session_state.show_analysis:
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
 
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
-    
-	# Simulated data
-	uc_demand = {
+    	uc_demand = {
 	    "required_power_mw": 5.0,
 	    "required_energy_mwh": 40,
 	    "required_standard": "IEC 80005-3",
