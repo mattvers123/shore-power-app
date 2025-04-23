@@ -71,12 +71,12 @@ if st.session_state.show_analysis:
 
 	# Calculate scores
     	def scaled_score(barge_val, required_val):
-	    if required_val == 0:
-	        return 0
-	    return min((barge_val / required_val), 1.0) * 100
+			if required_val == 0:
+	        	return 0
+	    	return min((barge_val / required_val), 1.0) * 100
 	
     	def binary_score(barge_val, required_val):
-	    return 100 if required_val in barge_val else 0
+	    	return 100 if required_val in barge_val else 0
 	
 	# Match scoring
     	score_data = [
