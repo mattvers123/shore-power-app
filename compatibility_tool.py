@@ -61,8 +61,8 @@ if st.session_state.show_analysis:
 
     	#st.subheader("🛠 Editable Compatibility Parameters")
     	#st.dataframe(editable_params)
-	st.subheader("All Compatibility Parameters")
-	st.dataframe(param_config_df)
+        st.subheader("All Compatibility Parameters")
+        st.dataframe(param_config_df)
 
     except Exception as e:
     	st.warning(f"Could not load editable parameter definitions: {e}")
