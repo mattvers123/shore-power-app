@@ -59,7 +59,6 @@ if st.session_state.show_analysis:
 	    "required_standard": "IEC 80005-3",
 	    "required_voltage": "HV"
 	}
-
 	barge = {
 	    "power_mw": 6.5,
 	    "energy_mwh": 30,
