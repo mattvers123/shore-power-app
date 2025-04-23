@@ -59,7 +59,7 @@ if st.session_state.show_analysis:
 	    "required_standard": "IEC 80005-3",
 	    "required_voltage": "HV"
 	}
-	barge = {
+    	barge = {
 	    "power_mw": 6.5,
 	    "energy_mwh": 30,
 	    "standards": ["IEC 80005-3"],
@@ -67,19 +67,19 @@ if st.session_state.show_analysis:
 	}
 	
 	# Manual input for soft parameter
-	user_operational_fit = st.slider("Operational Fit (0 = poor, 1 = perfect)", 0.0, 1.0, 0.7)
+    	user_operational_fit = st.slider("Operational Fit (0 = poor, 1 = perfect)", 0.0, 1.0, 0.7)
 
 	# Calculate scores
-	def scaled_score(barge_val, required_val):
+    	def scaled_score(barge_val, required_val):
 	    if required_val == 0:
 	        return 0
 	    return min((barge_val / required_val), 1.0) * 100
 	
-	def binary_score(barge_val, required_val):
+    	def binary_score(barge_val, required_val):
 	    return 100 if required_val in barge_val else 0
 	
 	# Match scoring
-	score_data = [
+    	score_data = [
 	    {
 	        "Factor": "Power Capacity",
 	        "Match (%)": scaled_score(barge["power_mw"], uc_demand["required_power_mw"]),
@@ -112,12 +112,12 @@ if st.session_state.show_analysis:
 	    }
 	]
 	
-	score_df = pd.DataFrame(score_data)
-	st.table(score_df)
+    	score_df = pd.DataFrame(score_data)
+    	st.table(score_df)
 	
 	# Total weighted score (simple equal weight for now)
-	total_score = score_df["Match (%)"].mean()
-	st.success(f"🔢 **Total Compatibility Score:** {total_score:.1f} / 100")
+    	total_score = score_df["Match (%)"].mean()
+    	st.success(f"🔢 **Total Compatibility Score:** {total_score:.1f} / 100")
 
 
 
