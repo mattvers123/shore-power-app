@@ -79,6 +79,8 @@ if st.session_state.show_analysis:
 	    "required_standard": "IEC 80005-3",
 	    "required_voltage": "HV"
 	}
+
+ 	st.write(f"Selected power: {uc_demand['required_power_mw']} MW")
     	barge = {
 	    "power_mw": 6.5,
 	    "energy_mwh": 30,
