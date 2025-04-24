@@ -52,6 +52,17 @@ if st.session_state.show_analysis:
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
 
+    # 1️⃣ 🚢 Ship Type Selector
+    try:
+        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
+        ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+        ship_type = st.selectbox("Select Ship Type", ship_demand_df["ship_type"].unique())
+        selected_ship = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
+    
+    except Exception as e:
+        st.warning(f"Could not load ship demand data: {e}")
+        selected_ship = None
+
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	uc_demand = {
 	    "required_power_mw": 5.0,
