@@ -76,17 +76,18 @@ if st.session_state.show_analysis:
         elif method == "LF":
             power = selected_ship["power_lf_mw"]
             energy = selected_ship["energy_lf_mwh"]
-        else:  # Average
-            power = np.mean([
-	        selected_ship["power_imo_mw"],
-	        selected_ship["power_emsa_mw"],
-	        selected_ship["power_lf_mw"]
-            ])
-            energy = np.mean([
-	        selected_ship["energy_imo_mwh"],
-	        selected_ship["energy_emsa_mwh"],
-	        selected_ship["energy_lf_mwh"]
-            ])
+        elif method == "Average":
+            power = round(np.mean([
+            selected_ship["power_imo_mw"],
+            selected_ship["power_emsa_mw"],
+            selected_ship["power_lf_mw"]
+            ]), 2)  # ⬅️ round to 2 decimal places
+
+            energy = round(np.mean([
+            selected_ship["energy_imo_mwh"],
+            selected_ship["energy_emsa_mwh"],
+            selected_ship["energy_lf_mwh"]
+            ]), 2)
 
         uc_demand = {
    	 	"required_power_mw": power,
