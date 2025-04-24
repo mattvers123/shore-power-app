@@ -65,14 +65,38 @@ if st.session_state.show_analysis:
 
     # 2️⃣ If a ship type is selected, define the UC demand profile 
     if selected_ship is not None:
-    	uc_demand = {
-       		"required_power_mw": selected_ship["power_imo_mw"],  # you can switch to EMSA/LF later
-        	"required_energy_mwh": selected_ship["energy_imo_mwh"],
-       		"required_standard": "IEC 80005-3",  # default for now
-        	"required_voltage": "HV"  # or "LV" depending on the case
-    	}
+	method = st.radio("Select estimation method for power/energy:", ["IMO", "EMSA", "LF", "Average"])
+	    
+    	if method == "IMO":
+    		power = selected_ship["power_imo_mw"]
+    		energy = selected_ship["energy_imo_mwh"]
+	elif method == "EMSA":
+    		power = selected_ship["power_emsa_mw"]
+    		energy = selected_ship["energy_emsa_mwh"]
+	elif method == "LF":
+    		power = selected_ship["power_lf_mw"]
+    		energy = selected_ship["energy_lf_mwh"]
+	else:  # Average
+    		power = np.mean([
+        		selected_ship["power_imo_mw"],
+        		selected_ship["power_emsa_mw"],
+       			 selected_ship["power_lf_mw"]
+    		])
+    		energy = np.mean([
+        		selected_ship["energy_imo_mwh"],
+        		selected_ship["energy_emsa_mwh"],
+        		selected_ship["energy_lf_mwh"]
+    		])
+
+	uc_demand = {
+   	 "required_power_mw": power,
+    	"required_energy_mwh": energy,
+    	"required_standard": "IEC 80005-3",
+    	"required_voltage": "HV"
+	}
+
 	# Radio button to choose power/energy estimation method
-    	method = st.radio("Select estimation method for power/energy:", ["IMO", "EMSA", "LF", "Average"])
+    	
 
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	
