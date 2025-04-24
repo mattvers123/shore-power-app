@@ -71,6 +71,7 @@ if st.session_state.show_analysis:
        		"required_standard": "IEC 80005-3",  # default for now
         	"required_voltage": "HV"  # or "LV" depending on the case
     	}
+	st.write(f"Selected power: {uc_demand['required_power_mw']} MW")
 	
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	uc_demand = {
