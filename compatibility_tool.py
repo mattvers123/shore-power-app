@@ -68,7 +68,7 @@ if st.session_state.show_analysis:
         method = st.radio("Select estimation method for power/energy:", ["IMO", "EMSA", "LF", "Average"])
 	    
         if method == "IMO":
-	    power = selected_ship["power_imo_mw"]
+            power = selected_ship["power_imo_mw"]
 	    energy = selected_ship["energy_imo_mwh"]
         elif method == "EMSA":
 	    power = selected_ship["power_emsa_mw"]
