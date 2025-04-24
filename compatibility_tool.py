@@ -72,7 +72,7 @@ if st.session_state.show_analysis:
         	"required_voltage": "HV"  # or "LV" depending on the case
     	}
 	# Radio button to choose power/energy estimation method
-	method = st.radio("Select estimation method for power/energy:", ["IMO", "EMSA", "LF", "Average"])
+    	method = st.radio("Select estimation method for power/energy:", ["IMO", "EMSA", "LF", "Average"])
 
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	
