@@ -69,24 +69,24 @@ if st.session_state.show_analysis:
 	    
         if method == "IMO":
             power = selected_ship["power_imo_mw"]
-	    energy = selected_ship["energy_imo_mwh"]
+            energy = selected_ship["energy_imo_mwh"]
         elif method == "EMSA":
-	    power = selected_ship["power_emsa_mw"]
-	    energy = selected_ship["energy_emsa_mwh"]
+            power = selected_ship["power_emsa_mw"]
+            energy = selected_ship["energy_emsa_mwh"]
         elif method == "LF":
-	    power = selected_ship["power_lf_mw"]
-	    energy = selected_ship["energy_lf_mwh"]
+            power = selected_ship["power_lf_mw"]
+            energy = selected_ship["energy_lf_mwh"]
         else:  # Average
-	    power = np.mean([
+            power = np.mean([
 	        selected_ship["power_imo_mw"],
 	        selected_ship["power_emsa_mw"],
 	        selected_ship["power_lf_mw"]
-	    ])
-	    energy = np.mean([
+            ])
+            energy = np.mean([
 	        selected_ship["energy_imo_mwh"],
 	        selected_ship["energy_emsa_mwh"],
 	        selected_ship["energy_lf_mwh"]
-	    ])
+            ])
 
         uc_demand = {
    	 	"required_power_mw": power,
