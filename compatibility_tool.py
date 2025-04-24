@@ -63,6 +63,15 @@ if st.session_state.show_analysis:
         st.warning(f"Could not load ship demand data: {e}")
         selected_ship = None
 
+    # 2️⃣ If a ship type is selected, define the UC demand profile 
+    if selected_ship is not None:
+    	uc_demand = {
+       		"required_power_mw": selected_ship["power_imo_mw"],  # you can switch to EMSA/LF later
+        	"required_energy_mwh": selected_ship["energy_imo_mwh"],
+       		"required_standard": "IEC 80005-3",  # default for now
+        	"required_voltage": "HV"  # or "LV" depending on the case
+    	}
+	
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	uc_demand = {
 	    "required_power_mw": 5.0,
