@@ -72,16 +72,8 @@ if st.session_state.show_analysis:
         	"required_voltage": "HV"  # or "LV" depending on the case
     	}
 	
-    	st.write(f"Selected power: {uc_demand['required_power_mw']} MW")
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
-    	uc_demand = {
-	    "required_power_mw": 5.0,
-	    "required_energy_mwh": 40,
-	    "required_standard": "IEC 80005-3",
-	    "required_voltage": "HV"
-	}
-
- 	
+    	
     	barge = {
 	    "power_mw": 6.5,
 	    "energy_mwh": 30,
