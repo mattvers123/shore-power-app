@@ -102,7 +102,7 @@ if st.session_state.show_analysis:
 
 	# Radio button to choose power/energy estimation method
 	# Lookup HV/LV capabilities from voltage compatibility sheet
-        voltage_row = voltage_df[voltage_df["Ship Type"] == ship_type]
+        voltage_row = voltage_df[voltage_df["ship_type"] == ship_type]
         supports_hv = voltage_row.iloc[0]["Supports HV"] == "Yes"
         supports_lv = voltage_row.iloc[0]["Supports LV"] == "Yes"
 
