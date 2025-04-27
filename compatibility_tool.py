@@ -197,6 +197,15 @@ if st.session_state.show_analysis:
 	
     	score_df = pd.DataFrame(score_data)
     	st.table(score_df)
+
+	# ⚡ Force total failure if HV/LV mismatch
+    	hv_lv_score = score_df.loc[score_df["Factor"] == "HV/LV Match", "Match (%)"].values[0]
+
+    	if hv_lv_score == 0:
+        	total_score = 0
+        	st.error("❌ Critical: Voltage mismatch (HV/LV) detected. Barge not compatible!")
+    	else:
+        	total_score = score_df["Match (%)"].mean()
 	
 	# Total weighted score (simple equal weight for now)
     	total_score = score_df["Match (%)"].mean()
