@@ -58,6 +58,10 @@ if st.session_state.show_analysis:
         ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
         ship_type = st.selectbox("Select Ship Type", ship_demand_df["ship_type"].unique())
         selected_ship = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
+
+	# Load Voltage Compatibility data
+        voltage_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Voltage Compatibility")
+        voltage_df = pd.DataFrame(voltage_sheet.get_all_records())
     
     except Exception as e:
         st.warning(f"Could not load ship demand data: {e}")
@@ -97,7 +101,35 @@ if st.session_state.show_analysis:
         }
 
 	# Radio button to choose power/energy estimation method
-    	
+	# Lookup HV/LV capabilities from voltage compatibility sheet
+        voltage_row = voltage_df[voltage_df["Ship Type"] == ship_type]
+        supports_hv = voltage_row.iloc[0]["Supports HV"] == "Yes"
+        supports_lv = voltage_row.iloc[0]["Supports LV"] == "Yes"
+
+        required_power = uc_demand["required_power_mw"]
+
+        # Decide voltage
+        if supports_hv and supports_lv:
+            if required_power > 1.0:
+                selected_voltage = "HV"
+                st.info(f"⚡ Required power is {required_power:.2f} MW > 1 MW → High Voltage (HV) enforced.")
+            else:
+                selected_voltage = st.radio(
+                    "Select connection voltage for this ship:",
+                    ["HV", "LV"]
+                )
+        elif supports_hv:
+            selected_voltage = "HV"
+            st.info("⚡ Ship supports only High Voltage (HV).")
+        elif supports_lv:
+            selected_voltage = "LV"
+            st.info("⚡ Ship supports only Low Voltage (LV).")
+        else:
+            selected_voltage = None
+            st.error("No voltage connection option available.")
+
+        # ✅ Now set the final voltage into demand profile
+        uc_demand["required_voltage"] = selected_voltage
 
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	
