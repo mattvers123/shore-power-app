@@ -208,7 +208,7 @@ if st.session_state.show_analysis:
         	total_score = score_df["Match (%)"].mean()
 	
 	# Total weighted score (simple equal weight for now)
-    	total_score = score_df["Match (%)"].mean()
+    	
     	if total_score >= 80:
         	st.success(f"✅ **Total Compatibility Score: {total_score:.1f} / 100**")
     	else:
