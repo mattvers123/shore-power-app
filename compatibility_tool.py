@@ -96,8 +96,8 @@ if st.session_state.show_analysis:
         uc_demand = {
    	 	"required_power_mw": power,
     	 	"required_energy_mwh": energy,
-    	 	"required_standard": "IEC 80005-3",
-    	 	"required_voltage": "HV"
+    	 	"required_standard": None,
+    	 	"required_voltage": None
         }
 
 	# Radio button to choose power/energy estimation method
@@ -130,6 +130,15 @@ if st.session_state.show_analysis:
 
         # ✅ Now set the final voltage into demand profile
         uc_demand["required_voltage"] = selected_voltage
+
+	
+        # 🛡 Set standard dynamically based on voltage
+        if selected_voltage == "HV":
+            uc_demand["required_standard"] = "IEC 80005-1"
+        elif selected_voltage == "LV":
+            uc_demand["required_standard"] = "IEC 80005-3"
+        else:
+            uc_demand["required_standard"] = None
 
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
     	
