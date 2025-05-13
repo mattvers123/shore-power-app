@@ -109,9 +109,9 @@ if st.session_state.show_analysis:
         )
 
         if regulation_ack:
-       	 	st.success("⚠️ **Mandatory Shore Power Connection applies as per regulatory requirements.**")
+       	 	st.success("⚠️ **Mandatory Shore Power Connection applies.**")
         else:
-       	 	st.info("Shore power connection **not mandatory** based on the provided declaration.")    
+       	 	st.info("Shore power connection **not mandatory** .")    
 
 	# Radio button to choose power/energy estimation method
 	# Lookup HV/LV capabilities from voltage compatibility sheet
