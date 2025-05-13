@@ -103,7 +103,7 @@ if st.session_state.show_analysis:
 
 	# 🚩 Regulatory Compliance Declaration
         #st.markdown("### 📝 Regulatory Compliance Declaration")
-	st.markdown( "<h5>📝 Regulatory Compliance Declaration</h5>", unsafe_allow_html=True)
+        st.markdown( "<h5>📝 Regulatory Compliance Declaration</h5>", unsafe_allow_html=True)
         regulation_ack = st.checkbox(
        	 	"Confirm: Vessel is over 5000 GT **and** will stay more than 2 hours at port (Mandatory Shore Power Connection applies)"
         )
