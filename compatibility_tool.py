@@ -100,6 +100,19 @@ if st.session_state.show_analysis:
     	 	"required_voltage": None
         }
 
+
+	# 🚩 Regulatory Compliance Declaration
+        st.markdown("### 📝 Regulatory Compliance Declaration")
+
+        regulation_ack = st.checkbox(
+       	 	"Confirm: Vessel is over 5000 GT **and** will stay more than 2 hours at port (Mandatory Shore Power Connection applies)"
+        )
+
+        if regulation_ack:
+       	 	st.success("⚠️ **Mandatory Shore Power Connection applies as per regulatory requirements.**")
+        else:
+       	 	st.info("Shore power connection **not mandatory** based on the provided declaration.")    
+
 	# Radio button to choose power/energy estimation method
 	# Lookup HV/LV capabilities from voltage compatibility sheet
         voltage_row = voltage_df[voltage_df["ship_type"] == ship_type]
