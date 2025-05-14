@@ -232,8 +232,8 @@ if st.session_state.show_analysis:
     try:
     	param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     	param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
-	columns_to_keep = ["Parameter ID", "Name", "Type", "Default Weight"]
-	filtered_df = param_config_df[columns_to_keep]
+    	columns_to_keep = ["Parameter ID", "Name", "Type", "Default Weight"]
+    	filtered_df = param_config_df[columns_to_keep]
     	st.subheader("All Compatibility Parameters")
     	st.dataframe(filtered_df)
 
