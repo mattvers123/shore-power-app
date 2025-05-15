@@ -234,38 +234,31 @@ try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
-    filtered_df = param_config_df[columns_to_keep].copy()
+    param_config_df = param_config_df[columns_to_keep].copy()
 
-    st.subheader("All Compatibility Parameters")
+    st.markdown("### ✅ Select Parameters to Include in the Calculation")
 
-    # 1️⃣ Editable'ı bool kontrolü için hazırlık
-    editable_flags = filtered_df["Editable"].apply(lambda x: str(x).strip().lower() == "true")
-
-    # 2️⃣ User Choice kolonunu başlat
-    filtered_df["User Choice"] = False
-
-    # 3️⃣ Checkbox sadece Editable == True olanlara aktif olacak
-    disabled_dict = {
-        "User Choice": [not flag for flag in editable_flags]
-    }
-
-    # 4️⃣ Editor
-    updated_df = st.data_editor(
-        filtered_df,
-        column_config={
-            "User Choice": st.column_config.CheckboxColumn(
-                label="User Choice",
-                help="Select to include this parameter in the analysis"
+    # Display as interactive checkboxes per row
+    selected_rows = []
+    for idx, row in param_config_df.iterrows():
+        editable = str(row["Editable"]).strip().lower() == "true"
+        if editable:
+            is_selected = st.checkbox(
+                f"[{row['Parameter ID']}] {row['Name']} — {row['Description']}",
+                key=f"param_select_{idx}"
             )
-        },
-        disabled=disabled_dict,
-        use_container_width=True
-    )
+            if is_selected:
+                selected_rows.append(row)
+        else:
+            st.markdown(f"🔒 [{row['Parameter ID']}] {row['Name']} — {row['Description']}")
 
-    # Seçilenleri al
-    selected = updated_df[updated_df["User Choice"] == True]
-    st.subheader("✅ Seçilen Parametreler")
-    st.dataframe(selected)
+    # Convert selection back to DataFrame if any are selected
+    if selected_rows:
+        selected_df = pd.DataFrame(selected_rows)
+        st.subheader("📝 Selected Parameters")
+        st.dataframe(selected_df)
+    else:
+        st.info("No parameters selected yet.")
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
