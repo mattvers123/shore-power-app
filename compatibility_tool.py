@@ -235,7 +235,7 @@ if st.session_state.show_analysis:
     	filtered_df = param_config_df[columns_to_keep].copy()
 
 	# ✅ Yeni kolon ekle (sadece Editable == True olanlara radio button)
-    	filtered_df["User Choice"] = [
+	filtered_df["User Choice"] = [
     		"Include" if editable == "True" else None
     		for editable in filtered_df["Editable"].astype(str)
     		]
