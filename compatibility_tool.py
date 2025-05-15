@@ -240,32 +240,37 @@ try:
 
     st.markdown("### ✅ Select Parameters to Include in the Calculation")
 
-    # Display as radio buttons per row only if editable is True
-    selected_rows = []
+    # Tüm satırlar için seçim yapılabilir, seçim sonucuna göre Include/Exclude ayrımı
+    included_rows = []
+    excluded_rows = []
+
     for idx, row in param_config_df.iterrows():
-        editable = str(row["Editable"]).strip().lower() == "true"
         col1, col2 = st.columns([4, 1])
         with col1:
             st.markdown(f"**[{row['Parameter ID']}] {row['Name']}** — {row['Description']}")
         with col2:
-            if editable:
-                choice = st.radio(
-                    label="",
-                    options=["Include", "Exclude"],
-                    key=f"param_radio_{idx}",
-                    horizontal=True
-                )
-                if choice == "Include":
-                    selected_rows.append(row)
+            choice = st.radio(
+                label="",
+                options=["Include", "Exclude"],
+                key=f"param_radio_{idx}",
+                horizontal=True
+            )
+            if choice == "Include":
+                included_rows.append(row)
             else:
-                st.markdown("🔒")
+                excluded_rows.append(row)
 
-    if selected_rows:
-        selected_df = pd.DataFrame(selected_rows)
-        st.subheader("📝 Selected Parameters")
-        st.dataframe(selected_df)
+    if included_rows:
+        included_df = pd.DataFrame(included_rows)
+        st.subheader("🟢 Included Parameters")
+        st.dataframe(included_df)
     else:
-        st.info("No parameters selected yet.")
+        st.info("No parameters selected for inclusion.")
+
+    if excluded_rows:
+        excluded_df = pd.DataFrame(excluded_rows)
+        st.subheader("🔴 Excluded Parameters")
+        st.dataframe(excluded_df)
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
