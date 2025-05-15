@@ -244,7 +244,7 @@ try:
     selected_rows = []
 
     for idx, row in param_config_df.iterrows():
-        editable = str(row["Editable"]).strip().lower() == "true"
+        editable = str(row["Editable"]).strip().lower() == "True"
         if editable:
             col1, col2 = st.columns([3, 1])
             with col1:
@@ -270,6 +270,7 @@ try:
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
+
 try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
