@@ -237,36 +237,21 @@ try:
     filtered_df = param_config_df[columns_to_keep].copy()
 
     # Editable sütunu orijinal haliyle kalsın (True/False string olabilir)
-
-    # User Choice sütununu başlat
-    filtered_df["User Choice"] = False
+    filtered_df["Editable"] = filtered_df["Editable"].astype(str)
 
     st.subheader("All Compatibility Parameters")
+    st.dataframe(filtered_df)
 
-    # Sadece Editable == True olanlara checkbox aktif olacak
-    disabled_user_choice = [str(val).lower() != "true" for val in filtered_df["Editable"]]
+    # Sadece Editable == "True" olan isimleri al
+    editable_names = filtered_df[filtered_df["Editable"].str.lower() == "true"]["Name"].tolist()
 
-    updated_df = st.data_editor(
-        filtered_df,
-        column_config={
-            "User Choice": st.column_config.CheckboxColumn(
-                label="User Choice",
-                help="Select to include this parameter in the analysis."
-            )
-        },
-        disabled={"User Choice": disabled_user_choice},
-        use_container_width=True
-    )
+    # Çoklu seçim
+    selected_params = st.multiselect("Select Parameters to Include in Calculation:", options=editable_names)
 
-    # Seçilen satırları göster
-    selected = updated_df[updated_df["User Choice"] == True]
+    # Seçilen satırları filtrele
+    selected = filtered_df[filtered_df["Name"].isin(selected_params)]
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
-
-    # Google Sheet'e yazmak için User Choice kolonunu güncelle
-    if "User Choice" in updated_df.columns:
-        for i, val in enumerate(updated_df["User Choice"].tolist()):
-            param_config_sheet.update_cell(i + 2, len(filtered_df.columns) + 1, str(val))
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
