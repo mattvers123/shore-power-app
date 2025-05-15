@@ -237,9 +237,7 @@ try:
     filtered_df = param_config_df[columns_to_keep].copy()
 
     # User Choice kolonunu baştan ekle (tümü False olarak başlasın)
-    filtered_df["User Choice"] = filtered_df["Editable"].apply(
-        lambda x: False if str(x).lower() == "true" else None
-    )
+    filtered_df["User Choice"] = False
 
     st.subheader("All Compatibility Parameters")
 
