@@ -441,7 +441,3 @@ else:
                 ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
                 st.pyplot(fig)
 
-
-   
-    
-
