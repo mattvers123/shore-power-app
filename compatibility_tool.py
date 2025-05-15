@@ -241,7 +241,7 @@ try:
         lambda x: False if str(x).lower() == "true" else None
     )
 
-    # ✅ Seriyi listeye çeviriyoruz
+    # Editable False olan satırlar için checkbox'ı disable yap (liste olarak veriyoruz)
     disabled_user_choice = [
         False if str(val).lower() == "true" else True
         for val in filtered_df["Editable"]
@@ -257,7 +257,7 @@ try:
                 help="Check to include this parameter"
             )
         },
-        disabled={"User Choice": disabled_user_choice},  # ✅ Buraya liste verdik
+        disabled={"User Choice": disabled_user_choice},
         use_container_width=True
     )
 
