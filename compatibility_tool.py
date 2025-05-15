@@ -238,7 +238,7 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type"]
     param_config_df = param_config_df[columns_to_keep].copy()
 
-    st.markdown("### ✅ Configure Parameters to Include in the Calculation")
+    st.markdown("### ⚙️ Configure Parameters with Selection Dropdown")
 
     selected_rows = []
 
@@ -246,24 +246,28 @@ try:
         label = f"[{row['Parameter ID']}] {row['Name']} — {row['Description']}"
         param_type = str(row['Parameter Type']).strip().lower()
 
-        if param_type == "must":
-            is_selected = st.checkbox(
-                label,
-                key=f"param_must_{idx}",
-                value=True,
-                disabled=True
-            )
-        elif param_type == "optional":
-            is_selected = st.checkbox(
-                label,
-                key=f"param_optional_{idx}",
-                value=False
-            )
-        else:
-            continue
-
-        if is_selected:
-            selected_rows.append(row)
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(label)
+        with col2:
+            if param_type == "must":
+                choice = st.selectbox(
+                    "Required",
+                    ["Include"],
+                    index=0,
+                    key=f"param_select_must_{idx}",
+                    disabled=True
+                )
+                selected_rows.append(row)
+            elif param_type == "optional":
+                choice = st.selectbox(
+                    "Select",
+                    ["Exclude", "Include"],
+                    index=0,
+                    key=f"param_select_opt_{idx}"
+                )
+                if choice == "Include":
+                    selected_rows.append(row)
 
     if selected_rows:
         selected_df = pd.DataFrame(selected_rows)
@@ -273,7 +277,8 @@ try:
         st.info("No parameters selected yet.")
 
 except Exception as e:
-    st.warning(f"Could not load editable parameter definitions: {e}")
+    st.warning(f"Could not load parameter definitions: {e}")
+
 
 try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
