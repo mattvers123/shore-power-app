@@ -238,8 +238,11 @@ try:
 
     # Editable sütunu orijinal haliyle (True/False olarak) kalsın
 
-    # User Choice kolonunu başlat
-    filtered_df["User Choice"] = False
+    # User Choice sütununu daha önceki verilerden oku veya başlat
+    if "User Choice" not in param_config_df.columns:
+        filtered_df["User Choice"] = False
+    else:
+        filtered_df["User Choice"] = param_config_df["User Choice"].astype(str).str.lower() == "true"
 
     st.subheader("All Compatibility Parameters")
 
@@ -263,6 +266,10 @@ try:
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
 
+    # Google Sheet'e yazmak için User Choice kolonunu güncelle
+    if "User Choice" in updated_df.columns:
+        for i, val in enumerate(updated_df["User Choice"].tolist()):
+            param_config_sheet.update_cell(i + 2, len(filtered_df.columns) + 1, str(val))
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
