@@ -230,12 +230,24 @@ if st.session_state.show_analysis:
 	
     # --- Load editable parameters from Google Sheet -- 
     try:
-    	param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     	param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
-    	columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
-    	filtered_df = param_config_df[columns_to_keep]
-    	st.subheader("All Compatibility Parameters")
-    	st.dataframe(filtered_df)
+	columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
+	filtered_df = param_config_df[columns_to_keep].copy()
+
+	# ✅ Yeni kolon ekle (sadece Editable == True olanlara radio button)
+	filtered_df["User Choice"] = [
+    		"Include" if editable == "True" else None
+    		for editable in filtered_df["Editable"].astype(str)
+		]
+
+	# 🎛️ st.data_editor kullan, Editable False olan satırları disable gibi göstermek için `disabled` paramı
+	st.subheader("All Compatibility Parameters")
+	st.data_editor(
+    		filtered_df,
+    		disabled=("Editable",),  # Editable kolonunu düzenlenemez yap
+    		use_container_width=True,
+    		num_rows="fixed"
+		)
 
     except Exception as e:
     	st.warning(f"Could not load editable parameter definitions: {e}")
