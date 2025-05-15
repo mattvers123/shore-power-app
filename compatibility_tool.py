@@ -236,15 +236,16 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # Editable sütunu bool'e dönüştür (kontrol için kullanılacak)
-    filtered_df["Editable"] = filtered_df["Editable"].astype(str).str.lower() == "true"
+    # Editable sütunu orijinal haliyle (True/False olarak) kalsın
 
     # User Choice kolonunu başlat
     filtered_df["User Choice"] = False
 
     st.subheader("All Compatibility Parameters")
 
-    # Sadece 'User Choice' dışındaki sütunları devre dışı bırak
+    # Sadece Editable == True olanlara checkbox aktif olacak
+    disabled_rows = [not bool(val) for val in filtered_df["Editable"]]
+
     updated_df = st.data_editor(
         filtered_df,
         column_config={
@@ -253,7 +254,7 @@ try:
                 help="Select to include this parameter in the analysis."
             )
         },
-        disabled=[col for col in filtered_df.columns if col != "User Choice"],
+        disabled={"User Choice": disabled_rows},
         use_container_width=True
     )
 
@@ -262,10 +263,6 @@ try:
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
 
-    # Google Sheet'e yazmak için User Choice kolonunu güncelle
-    updated_choices = updated_df["User Choice"].tolist()
-    for i, val in enumerate(updated_choices):
-        param_config_sheet.update_cell(i + 2, len(filtered_df.columns), str(val))
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
