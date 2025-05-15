@@ -236,20 +236,33 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # Editable sütunu orijinal haliyle kalsın (True/False string olabilir)
-    filtered_df["Editable"] = filtered_df["Editable"].astype(str)
+    # Editable sütununu orijinal bozulmadan göster
+
+    # User Choice checkbox kolonu başlat
+    if "User Choice" not in param_config_df.columns:
+        filtered_df["User Choice"] = False
+    else:
+        filtered_df["User Choice"] = param_config_df["User Choice"].astype(str).str.lower() == "true"
 
     st.subheader("All Compatibility Parameters")
-    st.dataframe(filtered_df)
 
-    # Sadece Editable == "True" olan isimleri al
-    editable_names = filtered_df[filtered_df["Editable"].str.lower() == "true"]["Name"].tolist()
+    # Checkbox sadece Editable == True olanlara aktif olacak
+    disabled_checkbox = [str(val).lower() != "true" for val in filtered_df["Editable"]]
 
-    # Çoklu seçim
-    selected_params = st.multiselect("Select Parameters to Include in Calculation:", options=editable_names)
+    updated_df = st.data_editor(
+        filtered_df,
+        column_config={
+            "User Choice": st.column_config.CheckboxColumn(
+                label="User Choice",
+                help="Select to include this parameter"
+            )
+        },
+        disabled={"User Choice": disabled_checkbox},
+        use_container_width=True
+    )
 
     # Seçilen satırları filtrele
-    selected = filtered_df[filtered_df["Name"].isin(selected_params)]
+    selected = updated_df[updated_df["User Choice"] == True]
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
 
