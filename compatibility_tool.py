@@ -236,16 +236,10 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # Editable sütununu bool olarak işleyelim ama orijinal string kalsın görünümde
-    editable_flags = filtered_df["Editable"].astype(str).str.lower() == "true"
-
     # User Choice kolonunu başlat
     filtered_df["User Choice"] = False
 
     st.subheader("All Compatibility Parameters")
-
-    # Checkbox sadece Editable == True olanlara açık olacak
-    disabled_user_choice = [not flag for flag in editable_flags]
 
     updated_df = st.data_editor(
         filtered_df,
@@ -255,11 +249,10 @@ try:
                 help="Select to include this parameter in the analysis."
             )
         },
-        disabled={"User Choice": disabled_user_choice},
+        editable=["User Choice"],  # ✅ sadece bu alan düzenlenebilir
         use_container_width=True
     )
 
-    # Seçilenleri filtrele
     selected = updated_df[updated_df["User Choice"] == True]
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
