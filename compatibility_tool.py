@@ -236,39 +236,30 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
+    # User Choice kolonunu baştan ekle (tümü False olarak başlasın)
+    filtered_df["User Choice"] = filtered_df["Editable"].apply(
+        lambda x: False if str(x).lower() == "true" else None
+    )
+
     st.subheader("All Compatibility Parameters")
 
-    user_choices = {}
-
-    for idx, row in filtered_df.iterrows():
-        editable = str(row["Editable"]).lower() == "true"
-        param_name = row["Name"]
-
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.markdown(f"**{param_name}** — {row['Description']}")
-        with col2:
-            if editable:
-                choice = st.radio(
-                    label="",
-                    options=["Include", "Exclude"],
-                    key=f"choice_{idx}",
-                    label_visibility="collapsed",
-                    horizontal=True
-                )
-                user_choices[idx] = choice
-            else:
-                user_choices[idx] = "Exclude"
-
-    # Seçimleri dataframe'e aktar (yalnızca Include yazılacak şekilde)
-    filtered_df["User Choice"] = [
-        "Include" if user_choices.get(i) == "Include" else ""
-        for i in filtered_df.index
+    # Checkbox'ları aktif hale getirmek için sadece Editable == True olanlara izin ver
+    disabled_user_choice = [
+        False if str(val).lower() == "true" else True
+        for val in filtered_df["Editable"]
     ]
 
-    st.markdown("---")
-    st.subheader("All Compatibility Parameters with Selection Result")
-    st.dataframe(filtered_df)
+    st.data_editor(
+        filtered_df,
+        column_config={
+            "User Choice": st.column_config.CheckboxColumn(
+                label="User Choice",
+                help="Select to include this parameter in the analysis."
+            )
+        },
+        disabled={"User Choice": disabled_user_choice},
+        use_container_width=True
+    )
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
