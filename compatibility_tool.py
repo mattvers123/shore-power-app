@@ -236,30 +236,36 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # Kullanıcı seçim kolonu: sadece Editable == True için checkbox göster
-    filtered_df["User Choice"] = filtered_df["Editable"].apply(
-        lambda x: False if str(x).lower() == "true" else None
-    )
-
-    # Editable False olan satırlar için checkbox'ı disable yap (liste olarak veriyoruz)
-    disabled_user_choice = [
-        False if str(val).lower() == "true" else True
-        for val in filtered_df["Editable"]
-    ]
-
     st.subheader("All Compatibility Parameters")
 
-    st.data_editor(
-        filtered_df,
-        column_config={
-            "User Choice": st.column_config.CheckboxColumn(
-                label="User Choice",
-                help="Check to include this parameter"
-            )
-        },
-        disabled={"User Choice": disabled_user_choice},
-        use_container_width=True
-    )
+    # Kullanıcı seçimlerini butonla toplamak için boş sözlük
+    user_choices = {}
+
+    for idx, row in filtered_df.iterrows():
+        editable = str(row["Editable"]).lower() == "true"
+        param_name = row["Name"]
+
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(f"**{param_name}** — {row['Description']}")
+        with col2:
+            if editable:
+                user_choices[idx] = st.radio(
+                    label="",
+                    options=["Include", "Exclude"],
+                    key=f"choice_{idx}",
+                    label_visibility="collapsed",
+                    horizontal=True
+                )
+            else:
+                user_choices[idx] = None
+
+    # Seçimleri dataframe'e aktar
+    filtered_df["User Choice"] = filtered_df.index.map(user_choices)
+
+    st.markdown("---")
+    st.subheader("Selected Parameters")
+    st.dataframe(filtered_df[filtered_df["User Choice"] == "Include"])
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
