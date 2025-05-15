@@ -236,30 +236,33 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # Editable sütunu bool'e dönüştür (kontrol için kullanılacak)
-    editable_flags = filtered_df["Editable"].astype(str).str.lower() == "true"
-
-    # User Choice kolonunu başlat
-    filtered_df["User Choice"] = False
-
     st.subheader("All Compatibility Parameters")
 
-    # Checkbox'ları aktif hale getirmek için sadece Editable == True olanlara izin ver
-    disabled_map = {i: not flag for i, flag in enumerate(editable_flags)}
+    # Editable kontrolü
+    filtered_df["Editable"] = filtered_df["Editable"].astype(str).str.lower() == "true"
+
+    # Başlangıçta False checkbox kolonu
+    filtered_df["User Choice"] = False
+
+    # ✅ Hücre bazlı disable ayarı
+    disabled_cells = {
+        (i, "User Choice"): not editable
+        for i, editable in enumerate(filtered_df["Editable"])
+    }
 
     updated_df = st.data_editor(
         filtered_df,
         column_config={
             "User Choice": st.column_config.CheckboxColumn(
                 label="User Choice",
-                help="Select to include this parameter in the analysis."
+                help="Select to include this parameter"
             )
         },
-        disabled=disabled_map,
+        disabled=disabled_cells,
         use_container_width=True
     )
 
-    # Seçilen satırları göster
+    # Seçilenler
     selected = updated_df[updated_df["User Choice"] == True]
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
