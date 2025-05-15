@@ -240,37 +240,37 @@ if st.session_state.show_analysis:
 
 	# Sadece Editable olanları göster
 	for idx, row in filtered_df.iterrows():
-    	editable = str(row["Editable"]).lower() == "true"
-    	param_name = row["Name"]
-    	default = "Include"
+    		editable = str(row["Editable"]).lower() == "true"
+    		param_name = row["Name"]
+    		default = "Include"
 
-    	if editable:
-        	col1, col2 = st.columns([3, 1])
-        	with col1:
-            	st.markdown(f"**{param_name}** — {row['Description']}")
-        	with col2:
-            	choice = st.radio(
-                	f"Choice for: {param_name}",
-                	["Include", "Exclude"],
-                	key=f"radio_{idx}"
-            	)
-            	filtered_df.at[idx, "User Choice"] = choice
-    	else:
-        	filtered_df.at[idx, "User Choice"] = None
+    		if editable:
+        		col1, col2 = st.columns([3, 1])
+        		with col1:
+            		st.markdown(f"**{param_name}** — {row['Description']}")
+        		with col2:
+            		choice = st.radio(
+                		f"Choice for: {param_name}",
+                		["Include", "Exclude"],
+                		key=f"radio_{idx}"
+            		)
+            		filtered_df.at[idx, "User Choice"] = choice
+    		else:
+        		filtered_df.at[idx, "User Choice"] = None
 
-	# Sonuçları göster
-	st.markdown("---")
-	st.subheader("Selected Parameters")
-	st.dataframe(filtered_df[filtered_df["User Choice"] == "Include"])
+		# Sonuçları göster
+		st.markdown("---")
+		st.subheader("Selected Parameters")
+		st.dataframe(filtered_df[filtered_df["User Choice"] == "Include"])
 
 
-        st.subheader("All Compatibility Parameters")
-        st.data_editor(
-            filtered_df,
-            disabled=("Editable",),
-            use_container_width=True,
-            num_rows="fixed"
-        )
+        	st.subheader("All Compatibility Parameters")
+        	st.data_editor(
+            	filtered_df,
+            	disabled=("Editable",),
+           	use_container_width=True,
+            	num_rows="fixed"
+        	)
 
     except Exception as e:
     	st.warning(f"Could not load editable parameter definitions: {e}")
