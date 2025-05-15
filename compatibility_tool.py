@@ -238,7 +238,6 @@ try:
 
     st.subheader("All Compatibility Parameters")
 
-    # Kullanıcı seçimlerini butonla toplamak için boş sözlük
     user_choices = {}
 
     for idx, row in filtered_df.iterrows():
@@ -250,22 +249,26 @@ try:
             st.markdown(f"**{param_name}** — {row['Description']}")
         with col2:
             if editable:
-                user_choices[idx] = st.radio(
+                choice = st.radio(
                     label="",
                     options=["Include", "Exclude"],
                     key=f"choice_{idx}",
                     label_visibility="collapsed",
                     horizontal=True
                 )
+                user_choices[idx] = choice
             else:
-                user_choices[idx] = None
+                user_choices[idx] = "Exclude"
 
-    # Seçimleri dataframe'e aktar
-    filtered_df["User Choice"] = filtered_df.index.map(user_choices)
+    # Seçimleri dataframe'e aktar (yalnızca Include yazılacak şekilde)
+    filtered_df["User Choice"] = [
+        "Include" if user_choices.get(i) == "Include" else ""
+        for i in filtered_df.index
+    ]
 
     st.markdown("---")
-    st.subheader("Selected Parameters")
-    st.dataframe(filtered_df[filtered_df["User Choice"] == "Include"])
+    st.subheader("All Compatibility Parameters with Selection Result")
+    st.dataframe(filtered_df)
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
