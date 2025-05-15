@@ -338,116 +338,116 @@ else:
     filtered = data[data["umbrella_name"] == umbrella]
     use_case = st.sidebar.selectbox("Select Use Case", filtered["use_case_name"].unique())
 
-    # Main output
-    st.title("Shore Power Compatibility Analysis")
-    st.subheader(f"Umbrella Case: {umbrella}")
-    st.subheader(f"Use Case: {use_case}")
+# Main output
+st.title("Shore Power Compatibility Analysis")
+st.subheader(f"Umbrella Case: {umbrella}")
+st.subheader(f"Use Case: {use_case}")
 
-    # Fetch description
-    desc_row = data[(data["umbrella_name"] == umbrella) & (data["use_case_name"] == use_case)]
-    if not desc_row.empty:
-        st.markdown(f"**Description:**\n\n{desc_row.iloc[0]['description']}")
-    else:
-        st.warning("Description not found.")
+# Fetch description
+desc_row = data[(data["umbrella_name"] == umbrella) & (data["use_case_name"] == use_case)]
+if not desc_row.empty:
+	st.markdown(f"**Description:**\n\n{desc_row.iloc[0]['description']}")
+else:
+	st.warning("Description not found.")
 
-    if use_case == "UC1: Anchored Vessels":
-        st.subheader("Anchored Ship Power Demand Lookup")
+if use_case == "UC1: Anchored Vessels":
+	st.subheader("Anchored Ship Power Demand Lookup")
 
-        # Load the correct worksheet
-        try:
-            ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
-            ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
-        except Exception as e:
-            st.error(f"Failed to load ship demand data: {e}")
-            ship_demand_df = None
+# Load the correct worksheet
+try:
+    ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
+    ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+except Exception as e:
+    st.error(f"Failed to load ship demand data: {e}")
+    ship_demand_df = None
 
-        if ship_demand_df is not None:
-            ship_type = st.selectbox("Select Ship Type at Anchorage", ship_demand_df["ship_type"].unique())
-            selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
+if ship_demand_df is not None:
+    ship_type = st.selectbox("Select Ship Type at Anchorage", ship_demand_df["ship_type"].unique())
+    selected = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
 
-            col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 2])
 
-            with col1:
-                st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
-                st.markdown(f"**Total Number of Calls**: `{selected['port_calls (no.)']}`")
+    with col1:
+	st.markdown(f"**Average Anchorage Time**: `{selected['avg_time_h']} hours`")
+	st.markdown(f"**Total Number of Calls**: `{selected['port_calls (no.)']}`")
 
-                st.markdown("**Power Demand (MW):**")
-                st.write(f"• IMO: `{selected['power_imo_mw']}`")
-                st.write(f"• EMSA: `{selected['power_emsa_mw']}`")
-                st.write(f"• Load Factor: `{selected['power_lf_mw']}`")
+	st.markdown("**Power Demand (MW):**")
+	st.write(f"• IMO: `{selected['power_imo_mw']}`")
+	st.write(f"• EMSA: `{selected['power_emsa_mw']}`")
+	st.write(f"• Load Factor: `{selected['power_lf_mw']}`")
 
-                st.markdown("**Energy Demand (MWh):**")
-                st.write(f"• IMO: `{selected['energy_imo_mwh']}`")
-                st.write(f"• EMSA: `{selected['energy_emsa_mwh']}`")
-                st.write(f"• Load Factor: `{selected['energy_lf_mwh']}`")
+	st.markdown("**Energy Demand (MWh):**")
+	st.write(f"• IMO: `{selected['energy_imo_mwh']}`")
+	st.write(f"• EMSA: `{selected['energy_emsa_mwh']}`")
+	st.write(f"• Load Factor: `{selected['energy_lf_mwh']}`")
 
-                st.markdown("---")
+	st.markdown("---")
 
-            with col2:
-                st.markdown("### Comparison Chart")
+    with col2:
+	st.markdown("### Comparison Chart")
 
-                metric = st.radio("Select Metric to Compare", [
-                    "Anchorage Time (h)",
-                    "Number of Port Calls",
-                    "Power Demand (MW)",
-                    "Energy Demand (MWh)"
-                ])
+	metric = st.radio("Select Metric to Compare", [
+	    "Anchorage Time (h)",
+	    "Number of Port Calls",
+	    "Power Demand (MW)",
+	    "Energy Demand (MWh)"
+	])
 
-                fig, ax = plt.subplots(figsize=(15, 10))
-                x = np.arange(len(ship_demand_df))
-                bar_labels = ship_demand_df["ship_type"]
-                highlight_color = "#FF5733"
-                default_color = "#AAAAAA"
-                method_colors = {
-                    "IMO": "#1f77b4",
-                    "EMSA": "#2ca02c",
-                    "LF": "#d62728"
-                }
-                width = 0.25
+	fig, ax = plt.subplots(figsize=(15, 10))
+	x = np.arange(len(ship_demand_df))
+	bar_labels = ship_demand_df["ship_type"]
+	highlight_color = "#FF5733"
+	default_color = "#AAAAAA"
+	method_colors = {
+	    "IMO": "#1f77b4",
+	    "EMSA": "#2ca02c",
+	    "LF": "#d62728"
+	}
+	width = 0.25
 
-                if metric == "Anchorage Time (h)":
-                    values = ship_demand_df["avg_time_h"]
-                    bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
-                    ax.bar(x, values, color=bar_colors)
-                    ax.set_ylabel("Hours")
-                    ax.set_title("Average Anchorage Time by Ship Type")
+	if metric == "Anchorage Time (h)":
+	    values = ship_demand_df["avg_time_h"]
+	    bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+	    ax.bar(x, values, color=bar_colors)
+	    ax.set_ylabel("Hours")
+	    ax.set_title("Average Anchorage Time by Ship Type")
 
-                elif metric == "Number of Port Calls":
-                    values = ship_demand_df["port_calls (no.)"]
-                    bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
-                    ax.bar(x, values, color=bar_colors)
-                    ax.set_ylabel("Calls")
-                    ax.set_title("Annual Port Calls")
+	elif metric == "Number of Port Calls":
+	    values = ship_demand_df["port_calls (no.)"]
+	    bar_colors = [highlight_color if s == ship_type else default_color for s in ship_demand_df["ship_type"]]
+	    ax.bar(x, values, color=bar_colors)
+	    ax.set_ylabel("Calls")
+	    ax.set_title("Annual Port Calls")
 
-                elif metric == "Power Demand (MW)":
-                    methods = ["power_imo_mw", "power_emsa_mw", "power_lf_mw"]
-                    for i, method in enumerate(methods):
-                        label = method.split("_")[1].upper()
-                        values = ship_demand_df[method]
-                        bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
-                        bars = ax.bar(x + (i - 1)*width, values, width, label=label,
-                                      color=method_colors[label], alpha=0.8)
-                        for bar, alpha in zip(bars, bar_alphas):
-                            bar.set_alpha(alpha)
-                    ax.set_ylabel("MW")
-                    ax.set_title("Power Demand by Ship Type and Method")
-                    ax.legend()
+	elif metric == "Power Demand (MW)":
+	    methods = ["power_imo_mw", "power_emsa_mw", "power_lf_mw"]
+	    for i, method in enumerate(methods):
+		label = method.split("_")[1].upper()
+		values = ship_demand_df[method]
+		bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
+		bars = ax.bar(x + (i - 1)*width, values, width, label=label,
+			      color=method_colors[label], alpha=0.8)
+		for bar, alpha in zip(bars, bar_alphas):
+		    bar.set_alpha(alpha)
+	    ax.set_ylabel("MW")
+	    ax.set_title("Power Demand by Ship Type and Method")
+	    ax.legend()
 
-                elif metric == "Energy Demand (MWh)":
-                    methods = ["energy_imo_mwh", "energy_emsa_mwh", "energy_lf_mwh"]
-                    for i, method in enumerate(methods):
-                        label = method.split("_")[1].upper()
-                        values = ship_demand_df[method]
-                        bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
-                        bars = ax.bar(x + (i - 1)*width, values, width, label=label,
-                                      color=method_colors[label], alpha=0.8)
-                        for bar, alpha in zip(bars, bar_alphas):
-                            bar.set_alpha(alpha)
-                    ax.set_ylabel("MWh")
-                    ax.set_title("Energy Demand by Ship Type and Method")
-                    ax.legend()
+	elif metric == "Energy Demand (MWh)":
+	    methods = ["energy_imo_mwh", "energy_emsa_mwh", "energy_lf_mwh"]
+	    for i, method in enumerate(methods):
+		label = method.split("_")[1].upper()
+		values = ship_demand_df[method]
+		bar_alphas = [1.0 if s == ship_type else 0.3 for s in ship_demand_df["ship_type"]]
+		bars = ax.bar(x + (i - 1)*width, values, width, label=label,
+			      color=method_colors[label], alpha=0.8)
+		for bar, alpha in zip(bars, bar_alphas):
+		    bar.set_alpha(alpha)
+	    ax.set_ylabel("MWh")
+	    ax.set_title("Energy Demand by Ship Type and Method")
+	    ax.legend()
 
-                ax.set_xticks(x)
-                ax.set_xticklabels(ship_demand_df["ship_type"], rotation=15)
-                ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
-                st.pyplot(fig)
+	ax.set_xticks(x)
+	ax.set_xticklabels(ship_demand_df["ship_type"], rotation=15)
+	ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
+	st.pyplot(fig)
