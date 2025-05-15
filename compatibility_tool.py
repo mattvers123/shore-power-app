@@ -234,35 +234,72 @@ if st.session_state.show_analysis:
 
 
 try:
-    # Google Sheet verisini al
+    # Google Sheet'ten veri çek
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
-    # Kullanılacak sütunlar
-    columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Param Type"]
-    param_config_df = param_config_df[columns_to_keep].copy()
+    # Kullanılacak sütunlar (İngilizce karşılıkları)
+    columns_to_keep = {
+        "Parameter ID": "Parameter ID",
+        "Name": "Name",
+        "Description": "Description",
+        "Type": "Type",
+        "Default Weight": "Default Weight",
+        "Editable": "Editable",
+        "Param Type": "Parameter Type"
+    }
 
-    st.markdown("## 🧮 Parametre Tablosu (Seçim Yap)")
+    param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
+    param_config_df.rename(columns=columns_to_keep, inplace=True)
 
-    # Kullanıcı seçimleri için geçici sütun
+    st.markdown("## ⚙️ Parameter Configuration Table")
+
+    # Seçim sütunu
     param_config_df["Selection"] = "Exclude"
 
-    # Form yapısı: tablo + buton bir arada
-    with st.form("param_selection_form"):
+    # Stil ayarları için boş div ile CSS
+    st.markdown("""
+        <style>
+        .stRadio > div {
+            gap: 5px !important;
+        }
+        div[data-testid="stForm"] table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .st-emotion-cache-1y4p8pa {
+            padding: 0.25rem 0 !important;  /* Satırlar arası boşluk azalt */
+            border-bottom: 1px solid #CCC;  /* Çizgi */
+        }
+        th, td {
+            padding: 4px 8px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Form başlat
+    with st.form("parameter_form"):
+        # Header row
+        headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Selection"]
+        header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 2])
+        for col, header in zip(header_cols, headers):
+            col.markdown(f"**{header}**")
+
+        # Row rendering
         for idx, row in param_config_df.iterrows():
-            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 2])  # Kolon genişlikleri
+            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 2])
 
-            # Satır bilgilerini yaz
-            cols[0].write(row["Parameter ID"])
-            cols[1].write(row["Name"])
-            cols[2].write(row["Description"])
-            cols[3].write(row["Type"])
-            cols[4].write(row["Default Weight"])
-            cols[5].write(row["Editable"])
-            cols[6].write(row["Param Type"])
+            cols[0].markdown(str(row["Parameter ID"]))
+            cols[1].markdown(str(row["Name"]))
+            cols[2].markdown(str(row["Description"]))
+            cols[3].markdown(str(row["Type"]))
+            cols[4].markdown(str(row["Default Weight"]))
+            cols[5].markdown(str(row["Editable"]))
+            cols[6].markdown(str(row["Parameter Type"]))
 
-            # Sadece editable ise seçim yapılabilsin
-            if str(row["Editable"]).strip().lower() == "true":
+            editable = str(row["Editable"]).strip().lower() == "true"
+
+            if editable:
                 choice = cols[7].radio(
                     label="",
                     options=["Exclude", "Include"],
@@ -271,25 +308,23 @@ try:
                 )
                 param_config_df.at[idx, "Selection"] = choice
             else:
-                cols[7].markdown("🔒")
+                cols[7].markdown("🔒 Locked")
 
-        # Buton: Seçimleri uygula
-        submitted = st.form_submit_button("✅ Seçilen Parametreleri Göster")
+        submitted = st.form_submit_button("✅ Show Selected Parameters")
 
-    # Eğer butona basıldıysa ve Include olanlar varsa göster
     if submitted:
-        selected_df = param_config_df[
-            (param_config_df["Selection"] == "Include")
-        ].drop(columns=["Selection"])
-
+        selected_df = param_config_df[param_config_df["Selection"] == "Include"].drop(columns=["Selection"])
         if not selected_df.empty:
-            st.markdown("### ✅ Seçilen Parametreler")
-            st.dataframe(selected_df)
+            st.markdown("### ✅ Selected Parameters")
+            st.dataframe(selected_df.style.set_properties(**{
+                'text-align': 'left',
+                'border': '1px solid lightgray'
+            }))
         else:
-            st.info("Hiçbir parametre seçilmedi.")
+            st.info("No parameters have been selected.")
 
 except Exception as e:
-    st.error(f"❌ Hata oluştu: {e}")
+    st.error(f"❌ Error loading parameter definitions: {e}")
 
 
 
