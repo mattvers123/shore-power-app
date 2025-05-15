@@ -232,17 +232,19 @@ if st.session_state.show_analysis:
 	
     # --- Load editable parameters from Google Sheet -- 
 
+
 try:
-    # Google Sheet'ten veri çek
+    # Google Sheet'ten veriyi çek
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
-    # Kullanılacak sütunları seç
+    # Gerekli sütunları filtrele
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Param Type"]
     param_config_df = param_config_df[columns_to_keep].copy()
 
     st.markdown("## ⚙️ Parametre Seçimi Paneli")
 
+    # Seçilen parametreleri tutmak için boş liste
     selected_rows = []
 
     with st.container():
@@ -262,25 +264,22 @@ try:
                         key=f"radio_{idx}",
                         horizontal=True
                     )
+                    if choice == "Include":
+                        selected_rows.append(row)
                 else:
-                    st.markdown("🔒 **Bu parametre düzenlenemez.**")
-                    choice = "Include" if param_type == "must" else "Exclude"
+                    st.markdown("🔒 **Bu parametre düzenlenemez.** (Zorunlu veya sistemsel)")
 
-                if choice == "Include":
-                    selected_rows.append(row)
-
-    # Seçilen parametreleri ayrı tabloda göster
+    # Seçilenler (sadece kullanıcı seçimi olanlar) göster
     if selected_rows:
         selected_df = pd.DataFrame(selected_rows)
         st.markdown("---")
-        st.subheader("✅ Seçilen Parametreler")
+        st.subheader("✅ Kullanıcı Tarafından Seçilen Parametreler")
         st.dataframe(selected_df.style.format(na_rep="-").set_properties(**{'text-align': 'left'}))
     else:
-        st.info("Henüz hiçbir parametre seçilmedi.")
+        st.info("Kullanıcı henüz seçim yapmadı.")
 
 except Exception as e:
-    st.error(f"❌ Parametre tanımları yüklenemedi: {e}")
-
+    st.error(f"❌ Parametreler yüklenirken hata oluştu: {e}")
 
 
 
