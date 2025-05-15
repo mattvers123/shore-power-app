@@ -244,7 +244,7 @@ try:
 
     for idx, row in param_config_df.iterrows():
         label = f"[{row['Parameter ID']}] {row['Name']} — {row['Description']}"
-        param_type = str(row['Parameter Type']).strip().lower()
+        param_type = str(row['Param Type']).strip().lower()
 
         col1, col2 = st.columns([4, 1])
         with col1:
