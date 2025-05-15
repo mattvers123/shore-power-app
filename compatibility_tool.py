@@ -236,28 +236,26 @@ try:
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
     filtered_df = param_config_df[columns_to_keep].copy()
 
-    # User Choice sütununu boş olarak ekle
-    filtered_df["User Choice"] = None
+    # Kullanıcı seçim kolonu: sadece Editable == True için checkbox göster
+    filtered_df["User Choice"] = filtered_df["Editable"].apply(
+        lambda x: False if str(x).lower() == "true" else None
+    )
+
+    # Editable False olan satırlar için checkbox'ı disable yap
+    disabled_rows = ~filtered_df["Editable"].astype(str).str.lower().eq("true")
 
     st.subheader("All Compatibility Parameters")
 
-    # Editable == True olanlara dışarıdan radio ekle
-    for idx, row in filtered_df.iterrows():
-        if str(row["Editable"]).lower() == "true":
-            choice = st.radio(
-                f"Choice for {row['Name']}",
-                ["Include", "Exclude"],
-                horizontal=True,
-                key=f"radio_{idx}"
-            )
-            filtered_df.at[idx, "User Choice"] = choice
-
-    # Tüm tabloyu göster (radio ile güncellenmiş)
     st.data_editor(
         filtered_df,
-        disabled=["Editable"],  # kullanıcı Editable kolonunu değiştiremesin
-        use_container_width=True,
-        num_rows="dynamic"
+        column_config={
+            "User Choice": st.column_config.CheckboxColumn(
+                label="User Choice",
+                help="Check to include this parameter"
+            )
+        },
+        disabled={"User Choice": disabled_rows},
+        use_container_width=True
     )
 
 except Exception as e:
