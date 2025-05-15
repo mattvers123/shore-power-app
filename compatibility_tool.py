@@ -265,9 +265,6 @@ except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
 
 
-    except Exception as e:
-    	st.warning(f"Could not load editable parameter definitions: {e}")
-
     if st.button("⬅️ Back to Use Case Selection"):
         st.session_state.show_analysis = False
         st.rerun()
