@@ -235,7 +235,7 @@ if st.session_state.show_analysis:
 try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
-    columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type"]
+    columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Param Type"]
     param_config_df = param_config_df[columns_to_keep].copy()
 
     st.markdown("### ⚙️ Configure Parameters with Selection Dropdown")
