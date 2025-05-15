@@ -47,11 +47,7 @@ if st.sidebar.button("🔍 Compatibility Analysis"):
     st.session_state.show_analysis = True
     st.rerun()
 
-# ✅ Page routing
-if st.session_state.show_analysis:
-	
-    st.title("⚙️ Compatibility Analysis Panel")
-    st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
+ 
 	
 		
     # 1️⃣ 🚢 Ship Type Selector
@@ -231,91 +227,95 @@ if st.session_state.show_analysis:
 
 	
     # --- Load editable parameters from Google Sheet -- 
+	# ✅ Page routing
+	if st.session_state.show_analysis:
+	
+    		st.title("⚙️ Compatibility Analysis Panel")
+    		st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.")
 
-
-try:
-    # Google Sheet'ten veri çek
-    param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
-    param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
-
-    # Gerekli kolonlar ve İngilizce başlıklar
-    columns_to_keep = {
-        "Parameter ID": "Parameter ID",
-        "Name": "Name",
-        "Description": "Description",
-        "Type": "Type",
-        "Default Weight": "Default Weight",
-        "Editable": "Editable",
-        "Param Type": "Parameter Type"
-    }
-    param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
-    param_config_df.rename(columns=columns_to_keep, inplace=True)
-
-    # Selection sütunu ekle
-    param_config_df["Selection"] = False
-
-    # CSS: Satır aralıklarını azalt, çizgi ekle
-    st.markdown("""
-        <style>
-        .stForm .block-container {
-            padding-top: 0rem;
-            padding-bottom: 0rem;
-        }
-        div[data-testid="column"] {
-            padding-top: 0.15rem;
-            padding-bottom: 0.15rem;
-            border-bottom: 1px solid #ddd;
-        }
-        .stRadio > div {
-            gap: 4px !important;
-        }
-        th, td {
-            padding: 2px 6px !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("## ⚙️ Parameter Selection Table")
-
-    with st.form("parameter_form"):
-        # Başlıklar
-        headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
-        header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-        for col, header in zip(header_cols, headers):
-            col.markdown(f"**{header}**")
-
-        # Satırları oluştur
-        for idx, row in param_config_df.iterrows():
-            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-            for i, key in zip(range(7), list(columns_to_keep.values())):
-                cols[i].markdown(str(row[key]))
-
-            editable = str(row["Editable"]).strip().lower() == "true"
-            if editable:
-                choice = cols[7].checkbox(
-                    label="",
-                    key=f"checkbox_{idx}"
-                )
-                param_config_df.at[idx, "Selection"] = choice
-            else:
-                cols[7].markdown("🔒")
-
-        submitted = st.form_submit_button("✅ Show Selected Parameters")
-
-    # Seçilenleri göster
-    if submitted:
-        selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
-        if not selected_df.empty:
-            st.markdown("### ✅ Selected Parameters")
-            st.dataframe(selected_df.style.set_properties(**{
-                'text-align': 'left',
-                'border': '1px solid lightgray'
-            }))
-        else:
-            st.info("No parameters were selected.")
-
-except Exception as e:
-    st.error(f"❌ Error loading parameter definitions: {e}")
+		try:
+		    # Google Sheet'ten veri çek
+		    param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
+		    param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+		
+		    # Gerekli kolonlar ve İngilizce başlıklar
+		    columns_to_keep = {
+		        "Parameter ID": "Parameter ID",
+		        "Name": "Name",
+		        "Description": "Description",
+		        "Type": "Type",
+		        "Default Weight": "Default Weight",
+		        "Editable": "Editable",
+		        "Param Type": "Parameter Type"
+		    }
+		    param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
+		    param_config_df.rename(columns=columns_to_keep, inplace=True)
+		
+		    # Selection sütunu ekle
+		    param_config_df["Selection"] = False
+		
+		    # CSS: Satır aralıklarını azalt, çizgi ekle
+		    st.markdown("""
+		        <style>
+		        .stForm .block-container {
+		            padding-top: 0rem;
+		            padding-bottom: 0rem;
+		        }
+		        div[data-testid="column"] {
+		            padding-top: 0.15rem;
+		            padding-bottom: 0.15rem;
+		            border-bottom: 1px solid #ddd;
+		        }
+		        .stRadio > div {
+		            gap: 4px !important;
+		        }
+		        th, td {
+		            padding: 2px 6px !important;
+		        }
+		        </style>
+		    """, unsafe_allow_html=True)
+		
+		    st.markdown("## ⚙️ Parameter Selection Table")
+		
+		    with st.form("parameter_form"):
+		        # Başlıklar
+		        headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
+		        header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+		        for col, header in zip(header_cols, headers):
+		            col.markdown(f"**{header}**")
+		
+		        # Satırları oluştur
+		        for idx, row in param_config_df.iterrows():
+		            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+		            for i, key in zip(range(7), list(columns_to_keep.values())):
+		                cols[i].markdown(str(row[key]))
+		
+		            editable = str(row["Editable"]).strip().lower() == "true"
+		            if editable:
+		                choice = cols[7].checkbox(
+		                    label="",
+		                    key=f"checkbox_{idx}"
+		                )
+		                param_config_df.at[idx, "Selection"] = choice
+		            else:
+		                cols[7].markdown("🔒")
+		
+		        submitted = st.form_submit_button("✅ Show Selected Parameters")
+		
+		    # Seçilenleri göster
+		    if submitted:
+		        selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
+		        if not selected_df.empty:
+		            st.markdown("### ✅ Selected Parameters")
+		            st.dataframe(selected_df.style.set_properties(**{
+		                'text-align': 'left',
+		                'border': '1px solid lightgray'
+		            }))
+		        else:
+		            st.info("No parameters were selected.")
+		
+		except Exception as e:
+		    st.error(f"❌ Error loading parameter definitions: {e}")
 
 
 
