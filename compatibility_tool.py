@@ -237,14 +237,19 @@ try:
     filtered_df = param_config_df[columns_to_keep].copy()
 
     # Editable sütunu bool'e dönüştür (kontrol için kullanılacak)
-    editable_flags = filtered_df["Editable"].astype(str).str.lower() == "true"
+    filtered_df["Editable"] = filtered_df["Editable"].astype(str).str.lower() == "true"
 
     # User Choice kolonunu başlat
     filtered_df["User Choice"] = False
 
     st.subheader("All Compatibility Parameters")
 
-    # Satır bazlı disable yerine sadece kolon bazlı izin ver
+    # Sadece 'Editable == True' olan satırlarda 'User Choice' aktif olacak şekilde hücre bazlı disable listesi
+    disabled_map = {
+        (i, "User Choice"): not row["Editable"]
+        for i, row in filtered_df.iterrows()
+    }
+
     updated_df = st.data_editor(
         filtered_df,
         column_config={
@@ -253,7 +258,7 @@ try:
                 help="Select to include this parameter in the analysis."
             )
         },
-        disabled=["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"],
+        disabled=disabled_map,
         use_container_width=True
     )
 
