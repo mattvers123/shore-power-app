@@ -236,10 +236,33 @@ if st.session_state.show_analysis:
         columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
         filtered_df = param_config_df[columns_to_keep].copy()
 
-        filtered_df["User Choice"] = [
-            "Include" if editable == "True" else None
-            for editable in filtered_df["Editable"].astype(str)
-        ]
+	st.subheader("All Compatibility Parameters")
+
+	# Sadece Editable olanları göster
+	for idx, row in filtered_df.iterrows():
+    	editable = str(row["Editable"]).lower() == "true"
+    	param_name = row["Name"]
+    	default = "Include"
+
+    	if editable:
+        	col1, col2 = st.columns([3, 1])
+        	with col1:
+            	st.markdown(f"**{param_name}** — {row['Description']}")
+        	with col2:
+            	choice = st.radio(
+                	f"Choice for: {param_name}",
+                	["Include", "Exclude"],
+                	key=f"radio_{idx}"
+            	)
+            	filtered_df.at[idx, "User Choice"] = choice
+    	else:
+        	filtered_df.at[idx, "User Choice"] = None
+
+	# Sonuçları göster
+	st.markdown("---")
+	st.subheader("Selected Parameters")
+	st.dataframe(filtered_df[filtered_df["User Choice"] == "Include"])
+
 
         st.subheader("All Compatibility Parameters")
         st.data_editor(
