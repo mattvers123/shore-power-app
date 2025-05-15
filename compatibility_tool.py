@@ -247,7 +247,8 @@ try:
         for val in filtered_df["Editable"]
     ]
 
-    st.data_editor(
+    # Kullanıcı seçimlerini yakala
+    updated_df = st.data_editor(
         filtered_df,
         column_config={
             "User Choice": st.column_config.CheckboxColumn(
@@ -258,6 +259,11 @@ try:
         disabled={"User Choice": disabled_user_choice},
         use_container_width=True
     )
+
+    # Seçilen satırları göster
+    selected = updated_df[updated_df["User Choice"] == True]
+    st.subheader("✅ Seçilen Parametreler")
+    st.dataframe(selected)
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
