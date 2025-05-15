@@ -238,21 +238,27 @@ try:
 
     st.markdown("### ✅ Select Parameters to Include in the Calculation")
 
-    # Display as interactive checkboxes per row
+    # Kullanıcı seçimlerini tutmak için liste
     selected_rows = []
+
     for idx, row in param_config_df.iterrows():
         editable = str(row["Editable"]).strip().lower() == "true"
         if editable:
-            is_selected = st.checkbox(
-                f"[{row['Parameter ID']}] {row['Name']} — {row['Description']}",
-                key=f"param_select_{idx}"
-            )
-            if is_selected:
-                selected_rows.append(row)
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"**{row['Name']}** — {row['Description']}")
+            with col2:
+                choice = st.radio(
+                    f"Choice for: {row['Parameter ID']}",
+                    ["Include", "Exclude"],
+                    key=f"radio_{idx}",
+                    horizontal=True
+                )
+                if choice == "Include":
+                    selected_rows.append(row)
         else:
             st.markdown(f"🔒 [{row['Parameter ID']}] {row['Name']} — {row['Description']}")
 
-    # Convert selection back to DataFrame if any are selected
     if selected_rows:
         selected_df = pd.DataFrame(selected_rows)
         st.subheader("📝 Selected Parameters")
@@ -262,6 +268,7 @@ try:
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
+
 
 
 
