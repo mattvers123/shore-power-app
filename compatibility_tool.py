@@ -247,7 +247,9 @@ try:
     st.subheader("All Compatibility Parameters")
 
     # Checkbox sadece Editable == True olanlara aktif olacak
-    disabled_checkbox = [str(val).lower() != "true" for val in filtered_df["Editable"]]
+    disabled_dict = {
+        "User Choice": [str(val).lower() != "true" for val in filtered_df["Editable"]]
+    }
 
     updated_df = st.data_editor(
         filtered_df,
@@ -257,7 +259,7 @@ try:
                 help="Select to include this parameter"
             )
         },
-        disabled={"User Choice": disabled_checkbox},
+        disabled=disabled_dict,
         use_container_width=True
     )
 
