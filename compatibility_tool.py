@@ -52,7 +52,45 @@ if st.session_state.show_analysis:
 	
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.") 
+	
+	try:
+    param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
+    param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+    columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
+    param_config_df = param_config_df[columns_to_keep].copy()
 
+    st.markdown("### ✅ Select Parameters to Include in the Calculation")
+
+    # Kullanıcı seçimlerini tutmak için liste
+    selected_rows = []
+
+    for idx, row in param_config_df.iterrows():
+        editable = str(row["Editable"]).strip().lower() == "true"
+        if editable:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"**{row['Name']}** — {row['Description']}")
+            with col2:
+                choice = st.radio(
+                    f"Choice for: {row['Parameter ID']}",
+                    ["Include", "Exclude"],
+                    key=f"radio_{idx}",
+                    horizontal=True
+                )
+                if choice == "Include":
+                    selected_rows.append(row)
+        else:
+            st.markdown(f"🔒 [{row['Parameter ID']}] {row['Name']} — {row['Description']}")
+
+    if selected_rows:
+        selected_df = pd.DataFrame(selected_rows)
+        st.subheader("📝 Selected Parameters")
+        st.dataframe(selected_df)
+    else:
+        st.info("No parameters selected yet.")
+
+except Exception as e:
+    st.warning(f"Could not load editable parameter definitions: {e}")	
     # 1️⃣ 🚢 Ship Type Selector
     try:
         ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
