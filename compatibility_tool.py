@@ -232,48 +232,43 @@ if st.session_state.show_analysis:
 	
     # --- Load editable parameters from Google Sheet -- 
 
-try:
-    param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
-    param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
-    columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable"]
-    param_config_df = param_config_df[columns_to_keep].copy()
+st.markdown("### ✅ Configure Parameters to Include in the Calculation")
 
-    st.markdown("### ✅ Select Parameters to Include in the Calculation")
+selected_rows = []
 
-    # Tüm satırlar için seçim yapılabilir, seçim sonucuna göre Include/Exclude ayrımı
-    included_rows = []
-    excluded_rows = []
+for idx, row in param_config_df.iterrows():
+    label = f"[{row['Parameter ID']}] {row['Name']} — {row['Description']}"
+    param_type = row['Parameter Type'].strip().lower()  # Normalize spacing/case
 
-    for idx, row in param_config_df.iterrows():
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.markdown(f"**[{row['Parameter ID']}] {row['Name']}** — {row['Description']}")
-        with col2:
-            choice = st.radio(
-                label="",
-                options=["Include", "Exclude"],
-                key=f"param_radio_{idx}",
-                horizontal=True
-            )
-            if choice == "Include":
-                included_rows.append(row)
-            else:
-                excluded_rows.append(row)
-
-    if included_rows:
-        included_df = pd.DataFrame(included_rows)
-        st.subheader("🟢 Included Parameters")
-        st.dataframe(included_df)
+    if param_type == "must":
+        # Pre-selected and locked
+        is_selected = st.checkbox(
+            label,
+            key=f"param_must_{idx}",
+            value=True,
+            disabled=True
+        )
+    elif param_type == "optional":
+        # User can choose to include or not
+        is_selected = st.checkbox(
+            label,
+            key=f"param_optional_{idx}",
+            value=False
+        )
     else:
-        st.info("No parameters selected for inclusion.")
+        # Skip unknown types or show as unselectable
+        continue
 
-    if excluded_rows:
-        excluded_df = pd.DataFrame(excluded_rows)
-        st.subheader("🔴 Excluded Parameters")
-        st.dataframe(excluded_df)
+    if is_selected:
+        selected_rows.append(row)
 
-except Exception as e:
-    st.warning(f"Could not load editable parameter definitions: {e}")
+# Display Selected Parameters
+if selected_rows:
+    selected_df = pd.DataFrame(selected_rows)
+    st.subheader("📝 Selected Parameters")
+    st.dataframe(selected_df)
+else:
+    st.info("No parameters selected yet.")
 
 try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
