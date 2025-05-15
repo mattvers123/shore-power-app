@@ -240,26 +240,25 @@ try:
 
     st.markdown("### ✅ Select Parameters to Include in the Calculation")
 
-    # Kullanıcı seçimlerini tutmak için liste
+    # Display as radio buttons per row only if editable is True
     selected_rows = []
-
     for idx, row in param_config_df.iterrows():
-        editable = str(row["Editable"]).strip().lower() == "True"
-        if editable:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"**{row['Name']}** — {row['Description']}")
-            with col2:
+        editable = str(row["Editable"]).strip().lower() == "true"
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(f"**[{row['Parameter ID']}] {row['Name']}** — {row['Description']}")
+        with col2:
+            if editable:
                 choice = st.radio(
-                    f"Choice for: {row['Parameter ID']}",
-                    ["Include", "Exclude"],
-                    key=f"radio_{idx}",
+                    label="",
+                    options=["Include", "Exclude"],
+                    key=f"param_radio_{idx}",
                     horizontal=True
                 )
                 if choice == "Include":
                     selected_rows.append(row)
-        else:
-            st.markdown(f"🔒 [{row['Parameter ID']}] {row['Name']} — {row['Description']}")
+            else:
+                st.markdown("🔒")
 
     if selected_rows:
         selected_df = pd.DataFrame(selected_rows)
