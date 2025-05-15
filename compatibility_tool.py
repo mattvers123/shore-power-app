@@ -244,12 +244,7 @@ try:
 
     st.subheader("All Compatibility Parameters")
 
-    # Sadece 'Editable == True' olan satırlarda 'User Choice' aktif olacak şekilde hücre bazlı disable listesi
-    disabled_map = {
-        (i, "User Choice"): not row["Editable"]
-        for i, row in filtered_df.iterrows()
-    }
-
+    # Sadece 'User Choice' dışındaki sütunları devre dışı bırak
     updated_df = st.data_editor(
         filtered_df,
         column_config={
@@ -258,7 +253,7 @@ try:
                 help="Select to include this parameter in the analysis."
             )
         },
-        disabled=disabled_map,
+        disabled=[col for col in filtered_df.columns if col != "User Choice"],
         use_container_width=True
     )
 
@@ -266,6 +261,11 @@ try:
     selected = updated_df[updated_df["User Choice"] == True]
     st.subheader("✅ Seçilen Parametreler")
     st.dataframe(selected)
+
+    # Google Sheet'e yazmak için User Choice kolonunu güncelle
+    updated_choices = updated_df["User Choice"].tolist()
+    for i, val in enumerate(updated_choices):
+        param_config_sheet.update_cell(i + 2, len(filtered_df.columns), str(val))
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
