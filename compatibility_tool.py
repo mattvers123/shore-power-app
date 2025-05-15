@@ -241,8 +241,11 @@ try:
         lambda x: False if str(x).lower() == "true" else None
     )
 
-    # Editable False olan satırlar için checkbox'ı disable yap
-    disabled_rows = ~filtered_df["Editable"].astype(str).str.lower().eq("true")
+    # ✅ Seriyi listeye çeviriyoruz
+    disabled_user_choice = [
+        False if str(val).lower() == "true" else True
+        for val in filtered_df["Editable"]
+    ]
 
     st.subheader("All Compatibility Parameters")
 
@@ -254,12 +257,13 @@ try:
                 help="Check to include this parameter"
             )
         },
-        disabled={"User Choice": disabled_rows},
+        disabled={"User Choice": disabled_user_choice},  # ✅ Buraya liste verdik
         use_container_width=True
     )
 
 except Exception as e:
     st.warning(f"Could not load editable parameter definitions: {e}")
+
 
 
 
