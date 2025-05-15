@@ -233,61 +233,53 @@ if st.session_state.show_analysis:
     # --- Load editable parameters from Google Sheet -- 
 
 try:
-    # Google Sheet'ten veriyi çek
+    # Google Sheet'ten veri çek
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
     param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
-    # İlgili kolonları filtrele
+    # Kullanılacak sütunları seç
     columns_to_keep = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Param Type"]
     param_config_df = param_config_df[columns_to_keep].copy()
 
-    st.markdown("### ⚙️ Configure Parameters with Radio Buttons")
-
-    # Başlıklar
-    header_cols = st.columns(8)
-    headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Param Type", "Selection"]
-    for col, header in zip(header_cols, headers):
-        col.markdown(f"**{header}**")
+    st.markdown("## ⚙️ Parametre Seçimi Paneli")
 
     selected_rows = []
 
-    # Satırları gez
-    for idx, row in param_config_df.iterrows():
-        cols = st.columns(8)
+    with st.container():
+        for idx, row in param_config_df.iterrows():
+            editable = str(row["Editable"]).strip().lower() == "true"
+            param_type = str(row["Param Type"]).strip().lower()
 
-        for i, key in enumerate(columns_to_keep):
-            cols[i].markdown(str(row[key]))
+            with st.expander(f"🔹 [{row['Parameter ID']}] {row['Name']}"):
+                st.write(f"**Açıklama:** {row['Description']}")
+                st.write(f"**Tür:** {row['Type']} | **Varsayılan Ağırlık:** {row['Default Weight']} | **Düzenlenebilir:** {row['Editable']} | **Tip:** {row['Param Type']}")
 
-        editable = str(row["Editable"]).strip().lower() == "true"
-        param_type = str(row["Param Type"]).strip().lower()
+                if editable:
+                    choice = st.radio(
+                        "Seçim:",
+                        options=["Exclude", "Include"],
+                        index=0,
+                        key=f"radio_{idx}",
+                        horizontal=True
+                    )
+                else:
+                    st.markdown("🔒 **Bu parametre düzenlenemez.**")
+                    choice = "Include" if param_type == "must" else "Exclude"
 
-        if editable:
-            choice = cols[7].radio(
-                label="",
-                options=["Exclude", "Include"],
-                key=f"radio_{idx}",
-                horizontal=True
-            )
-        else:
-            cols[7].markdown("🔒 Locked")
-            choice = "Include" if param_type == "must" else "Exclude"
+                if choice == "Include":
+                    selected_rows.append(row)
 
-        if choice == "Include":
-            selected_rows.append(row)
-
+    # Seçilen parametreleri ayrı tabloda göster
     if selected_rows:
         selected_df = pd.DataFrame(selected_rows)
-        st.subheader("📝 Selected Parameters")
-        st.dataframe(selected_df)
+        st.markdown("---")
+        st.subheader("✅ Seçilen Parametreler")
+        st.dataframe(selected_df.style.format(na_rep="-").set_properties(**{'text-align': 'left'}))
     else:
-        st.info("No parameters selected yet.")
+        st.info("Henüz hiçbir parametre seçilmedi.")
 
 except Exception as e:
-    st.warning(f"Could not load parameter definitions: {e}")
-
-except Exception as e:
-    st.warning(f"Could not load parameter definitions: {e}")
-
+    st.error(f"❌ Parametre tanımları yüklenemedi: {e}")
 
 
 
