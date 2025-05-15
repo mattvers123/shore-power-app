@@ -15,9 +15,9 @@ with open("bluebarge-logo-white.svg", "r") as f:
     svg_logo = f.read()
 st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
 
-gcp_secrets = st.secrets["gcp_service_account"]
+gcp_secrets_dict = dict(st.secrets["gcp_service_account"])
 with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as tmp:
-    json.dump(gcp_secrets, tmp)
+    json.dump(gcp_secrets_dict, tmp)
     tmp_path = tmp.name
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
