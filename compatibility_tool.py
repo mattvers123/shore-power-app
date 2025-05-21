@@ -336,7 +336,7 @@ try:
                 with col2:
                         value_input = st.number_input("Parameter Value", value=0.0, step=0.1, format="%.2f")
                 with col3:
-                weight_input = st.slider("Weight", min_value=0.0, max_value=1.0, value=0.5)
+                        weight_input = st.slider("Weight", min_value=0.0, max_value=1.0, value=0.5)
 
                 submitted = st.form_submit_button("➕ Add Parameter")
                 if submitted and name_input.strip() != "":
