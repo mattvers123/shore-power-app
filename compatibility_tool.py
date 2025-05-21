@@ -300,6 +300,57 @@ try:
 
             submitted = st.form_submit_button("✅ Show Selected Parameters")
 
+	if submitted:
+    selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
+    if not selected_df.empty:
+        st.markdown("### ✅ Selected Parameters")
+        st.dataframe(selected_df.style.set_properties(**{
+            'text-align': 'left',
+            'border': '1px solid lightgray'
+        }))
+    else:
+        st.info("No parameters were selected.")
+
+# ⬇️⬇️⬇️ BURADAN SONRA YENİ KODU EKLE ⬇️⬇️⬇️
+
+# 👤 User-defined parameters section
+st.markdown("## ➕ User-defined Parameters")
+
+user_param_container = st.container()
+
+with user_param_container:
+    st.markdown("""
+    You can add custom parameters to include in the analysis.  
+    These will be treated with equal importance in compatibility scoring.
+    """)
+
+    user_param_df = pd.DataFrame(columns=["Name", "Value", "Weight (0-1)"])
+
+    if "user_params" not in st.session_state:
+        st.session_state.user_params = []
+
+    with st.form("add_user_param"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            name_input = st.text_input("Parameter Name")
+        with col2:
+            value_input = st.number_input("Parameter Value", value=0.0, step=0.1, format="%.2f")
+        with col3:
+            weight_input = st.slider("Weight", min_value=0.0, max_value=1.0, value=0.5)
+
+        submitted = st.form_submit_button("➕ Add Parameter")
+        if submitted and name_input.strip() != "":
+            st.session_state.user_params.append({
+                "Name": name_input.strip(),
+                "Value": value_input,
+                "Weight": weight_input
+            })
+
+    if st.session_state.user_params:
+        st.markdown("### 📌 Added Custom Parameters:")
+        user_param_df = pd.DataFrame(st.session_state.user_params)
+        st.dataframe(user_param_df)
+
         if submitted:
             selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
             if not selected_df.empty:
