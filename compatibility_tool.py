@@ -353,14 +353,14 @@ try:
 
         if submitted:
                 selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
-            if not selected_df.empty:
-                st.markdown("### ✅ Selected Parameters")
-                st.dataframe(selected_df.style.set_properties(**{
-                    'text-align': 'left',
-                    'border': '1px solid lightgray'
+                if not selected_df.empty:
+                        st.markdown("### ✅ Selected Parameters")
+                        st.dataframe(selected_df.style.set_properties(**{
+                        'text-align': 'left',
+                        'border': '1px solid lightgray'
                 }))
-            else:
-                st.info("No parameters were selected.")
+                else:
+                        st.info("No parameters were selected.")
 
 except Exception as e:
     st.error(f"❌ Error loading parameter definitions: {e}")
