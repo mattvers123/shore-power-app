@@ -232,10 +232,123 @@ if st.session_state.show_analysis:
 
 	
     # --- Load editable parameters from Google Sheet -- 
-	
+	# --- Load editable parameters from Google Sheet (Moved Here: After Compatibility Analysis Section) ---
+if st.session_state.get("show_analysis", False):
+    st.markdown("---")
+    st.markdown("## ⚙️ Parameter Selection Table")
 
-import streamlit as st
-import pandas as pd
+    try:
+        param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
+        param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+
+        columns_to_keep = {
+            "Parameter ID": "Parameter ID",
+            "Name": "Name",
+            "Description": "Description",
+            "Type": "Type",
+            "Default Weight": "Default Weight",
+            "Editable": "Editable",
+            "Param Type": "Parameter Type"
+        }
+        param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
+        param_config_df.rename(columns=columns_to_keep, inplace=True)
+        param_config_df["Selection"] = False
+
+        # CSS: Satır aralıklarını azalt
+        st.markdown("""
+            <style>
+            .stForm .block-container {
+                padding-top: 0rem;
+                padding-bottom: 0rem;
+            }
+            div[data-testid="column"] {
+                padding-top: 0.15rem;
+                padding-bottom: 0.15rem;
+                border-bottom: 1px solid #ddd;
+            }
+            .stRadio > div {
+                gap: 4px !important;
+            }
+            th, td {
+                padding: 2px 6px !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
+        with st.form("parameter_form"):
+            headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
+            header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+            for col, header in zip(header_cols, headers):
+                col.markdown(f"**{header}**")
+
+            for idx, row in param_config_df.iterrows():
+                cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+                for i, key in zip(range(7), list(columns_to_keep.values())):
+                    cols[i].markdown(str(row[key]))
+
+                editable = str(row["Editable"]).strip().lower() == "true"
+                if editable:
+                    choice = cols[7].checkbox("", key=f"checkbox_{idx}")
+                    param_config_df.at[idx, "Selection"] = choice
+                else:
+                    cols[7].markdown("🔒")
+
+            submitted = st.form_submit_button("✅ Show Selected Parameters")
+
+        if submitted:
+            selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
+            if not selected_df.empty:
+                st.markdown("### ✅ Selected Parameters")
+                st.dataframe(selected_df.style.set_properties(**{
+                    'text-align': 'left',
+                    'border': '1px solid lightgray'
+                }))
+            else:
+                st.info("No parameters were selected.")
+
+        # 👤 User-defined parameters section
+        st.markdown("## ➕ User-defined Parameters")
+
+        user_param_container = st.container()
+
+        with user_param_container:
+            st.markdown("""
+                You can add custom parameters to include in the analysis.  
+                These will be treated with equal importance in compatibility scoring.
+            """)
+
+            user_param_df = pd.DataFrame(columns=["Name", "Value", "Weight (0-1)"])
+
+            if "user_params" not in st.session_state:
+                st.session_state.user_params = []
+
+            with st.form("add_user_param"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    name_input = st.text_input("Parameter Name")
+                with col2:
+                    value_input = st.number_input("Parameter Value", value=0.0, step=0.1, format="%.2f")
+                with col3:
+                    weight_input = st.slider("Weight", min_value=0.0, max_value=1.0, value=0.5)
+
+                user_submitted = st.form_submit_button("➕ Add Parameter")
+                if user_submitted and name_input.strip() != "":
+                    st.session_state.user_params.append({
+                        "Name": name_input.strip(),
+                        "Value": value_input,
+                        "Weight": weight_input
+                    })
+
+            if st.session_state.user_params:
+                st.markdown("### 📌 Added Custom Parameters:")
+                user_param_df = pd.DataFrame(st.session_state.user_params)
+                st.dataframe(user_param_df)
+
+    except Exception as e:
+        st.error(f"❌ Error loading parameter definitions: {e}")
+
+
+
 
 try:
     param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
