@@ -236,74 +236,179 @@ if st.session_state.show_analysis:
 if st.session_state.get("show_analysis", False):
     st.markdown("---")
     st.markdown("## ⚙️ Parameter Selection Table")
-	try:
-        param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
-        param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+try:
+    parametre_sayfasi = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
+    parametre_df = pd.DataFrame(parametre_sayfasi.get_all_records())
 
-        columns_to_keep = {
-            "Parameter ID": "Parameter ID",
-            "Name": "Name",
-            "Description": "Description",
-            "Type": "Type",
-            "Default Weight": "Default Weight",
-            "Editable": "Editable",
-            "Param Type": "Parameter Type"
-        }
-        param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
-        param_config_df.rename(columns=columns_to_keep, inplace=True)
-        param_config_df["Selection"] = False
+    sutun_haritalama = {
+        "Parameter ID": "Parametre ID",
+        "Name": "Ad",
+        "Description": "Açıklama",
+        "Type": "Tür",
+        "Default Weight": "Varsayılan Ağırlık",
+        "Editable": "Düzenlenebilir",
+        "Param Type": "Parametre Türü"
+    }
+    parametre_df = parametre_df[list(sutun_haritalama.keys())].copy()
+    parametre_df.rename(columns=sutun_haritalama, inplace=True)
+    parametre_df["Seçim"] = False
 
-        # CSS: Satır aralıklarını azalt
-        st.markdown("""
-            <style>
-            .stForm .block-container {
-                padding-top: 0rem;
-                padding-bottom: 0rem;
-            }
-            div[data-testid="column"] {
-                padding-top: 0.15rem;
-                padding-bottom: 0.15rem;
-                border-bottom: 1px solid #ddd;
-            }
-            .stRadio > div {
-                gap: 4px !important;
-            }
-            th, td {
-                padding: 2px 6px !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+    st.markdown("## ⚙️ Parametre Seçim Tablosu")
 
-        with st.form("parameter_form"):
-            headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
-            header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-            for col, header in zip(header_cols, headers):
-                col.markdown(f"**{header}**")
+    with st.form("parametre_formu"):
+        basliklar = ["Parametre ID", "Ad", "Açıklama", "Tür", "Varsayılan Ağırlık", "Düzenlenebilir", "Parametre Türü", "Seçilsin mi?"]
+        baslik_kolonlari = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+        for kol, baslik in zip(baslik_kolonlari, basliklar):
+            kol.markdown(f"**{baslik}**")
 
-            for idx, row in param_config_df.iterrows():
-                cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-                for i, key in zip(range(7), list(columns_to_keep.values())):
-                    cols[i].markdown(str(row[key]))
+        for idx, satir in parametre_df.iterrows():
+            kolonlar = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+            for i, anahtar in zip(range(7), list(sutun_haritalama.values())):
+                kolonlar[i].markdown(str(satir[anahtar]))
 
-                editable = str(row["Editable"]).strip().lower() == "true"
-                if editable:
-                    choice = cols[7].checkbox("", key=f"checkbox_{idx}")
-                    param_config_df.at[idx, "Selection"] = choice
-                else:
-                    cols[7].markdown("🔒")
-
-            submitted = st.form_submit_button("✅ Show Selected Parameters")
-
-        if submitted:
-            selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
-            if not selected_df.empty:
-                st.markdown("### ✅ Selected Parameters")
-                st.dataframe(selected_df.style.set_properties(**{
-                    'text-align': 'left',
-                    'border': '1px solid lightgray'
-                }))
+            duzenlenebilir = str(satir["Düzenlenebilir"]).strip().lower() == "true"
+            if duzenlenebilir:
+                secim = kolonlar[7].checkbox("", key=f"checkbox_{idx}")
+                parametre_df.at[idx, "Seçim"] = secim
             else:
-                st.info("No parameters were selected.")
+                kolonlar[7].markdown("🔒")
+
+        gonderildi = st.form_submit_button("✅ Seçilen Parametreleri Göster")
+
+    if gonderildi:
+        secilen_df = parametre_df[parametre_df["Seçim"] == True].drop(columns=["Seçim"])
+        if not secilen_df.empty:
+            st.markdown("### ✅ Seçilen Parametreler")
+            st.dataframe(secilen_df)
+        else:
+            st.info("Herhangi bir parametre seçilmedi.")
+
+except Exception as e:
+    st.error(f"❌ Parametre tanımları yüklenirken hata oluştu: {e}")
+
+# ✅ Uyum Analizi Başlat Butonu (sidebar'da)
+if "show_analysis" not in st.session_state:
+    st.session_state.show_analysis = False
+
+if st.sidebar.button("🔍 Uyum Analizi Başlat"):
+    st.session_state.show_analysis = True
+    st.rerun()
+
+# ✅ Uyum Analizi Paneli
+if st.session_state.show_analysis:
+    st.title("⚙️ Uyum Analizi Paneli")
+    st.markdown("Gemi talepleri, liman yetenekleri ve BlueBARGE özelliklerini karşılaştır.")
+
+    try:
+        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
+        ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+        ship_type = st.selectbox("Gemi Tipini Seçin", ship_demand_df["ship_type"].unique())
+        selected_ship = ship_demand_df[ship_demand_df["ship_type"] == ship_type].iloc[0]
+
+        voltage_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Voltage Compatibility")
+        voltage_df = pd.DataFrame(voltage_sheet.get_all_records())
+
+    except Exception as e:
+        st.warning(f"Gemi talep verileri yüklenemedi: {e}")
+        selected_ship = None
+
+    if selected_ship is not None:
+        method = st.radio("Güç/enerji hesaplama yöntemi seçin:", ["IMO", "EMSA", "LF", "Ortalama"])
+
+        if method == "IMO":
+            power = selected_ship["power_imo_mw"]
+            energy = selected_ship["energy_imo_mwh"]
+        elif method == "EMSA":
+            power = selected_ship["power_emsa_mw"]
+            energy = selected_ship["energy_emsa_mwh"]
+        elif method == "LF":
+            power = selected_ship["power_lf_mw"]
+            energy = selected_ship["energy_lf_mwh"]
+        else:
+            power = round(np.mean([
+                selected_ship["power_imo_mw"],
+                selected_ship["power_emsa_mw"],
+                selected_ship["power_lf_mw"]
+            ]), 2)
+            energy = round(np.mean([
+                selected_ship["energy_imo_mwh"],
+                selected_ship["energy_emsa_mwh"],
+                selected_ship["energy_lf_mwh"]
+            ]), 2)
+
+        uc_demand = {
+            "required_power_mw": power,
+            "required_energy_mwh": energy,
+            "required_standard": None,
+            "required_voltage": None
+        }
+
+        st.markdown("<h6>📝 Yasal Uyumluluk Bildirimi</h6>", unsafe_allow_html=True)
+        regulation_ack = st.checkbox("5000 GT üzeri ve 2 saatten fazla limanda kalış? (Şore Gücü Zorunlu)")
+        if regulation_ack:
+            st.success("⚠️ Zorunlu Şore Gücü Bağlantısı uygulanmalı.")
+        else:
+            st.info("Şore gücü bağlantısı zorunlu değil.")
+
+        voltage_row = voltage_df[voltage_df["ship_type"] == ship_type]
+        supports_hv = voltage_row.iloc[0]["supports HV"] == "Yes"
+        supports_lv = voltage_row.iloc[0]["supports LV"] == "Yes"
+
+        if supports_hv and supports_lv:
+            if power > 1.0:
+                selected_voltage = "HV"
+                st.info(f"⚡ Güç {power:.2f} MW > 1 MW → Yüksek Gerilim (HV) zorunlu.")
+            else:
+                selected_voltage = st.radio("Bağlantı Voltajını Seçin:", ["HV", "LV"])
+        elif supports_hv:
+            selected_voltage = "HV"
+            st.info("⚡ Gemi sadece Yüksek Gerilim (HV) destekliyor.")
+        elif supports_lv:
+            selected_voltage = "LV"
+            st.info("⚡ Gemi sadece Düşük Gerilim (LV) destekliyor.")
+        else:
+            selected_voltage = None
+            st.error("⚠️ Gerilim bağlantı seçeneği bulunamadı.")
+
+        uc_demand["required_voltage"] = selected_voltage
+
+        if selected_voltage == "HV":
+            uc_demand["required_standard"] = "IEC 80005-1"
+        elif selected_voltage == "LV":
+            uc_demand["required_standard"] = "IEC 80005-3"
+
+        st.markdown("---")
+
+        st.markdown("## ➕ Kullanıcı Tanımlı Parametreler")
+        if "user_params" not in st.session_state:
+            st.session_state.user_params = []
+
+        with st.form("kullanici_param_formu"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                name_input = st.text_input("Parametre Adı")
+            with col2:
+                value_input = st.number_input("Parametre Değeri", value=0.0, step=0.1, format="%.2f")
+            with col3:
+                weight_input = st.slider("Ağırlık", min_value=0.0, max_value=1.0, value=0.5)
+
+            user_submitted = st.form_submit_button("➕ Parametre Ekle")
+            if user_submitted and name_input.strip() != "":
+                st.session_state.user_params.append({
+                    "Ad": name_input.strip(),
+                    "Değer": value_input,
+                    "Ağırlık": weight_input
+                })
+
+        if st.session_state.user_params:
+            user_param_df = pd.DataFrame(st.session_state.user_params)
+            st.markdown("### 📌 Eklenmiş Kullanıcı Parametreleri")
+            st.dataframe(user_param_df)
+
+    if st.button("⬅️ Use Case Seçimine Geri Dön"):
+        st.session_state.show_analysis = False
+        st.rerun()
+
 
         # 👤 User-defined parameters section
         st.markdown("## ➕ User-defined Parameters")
