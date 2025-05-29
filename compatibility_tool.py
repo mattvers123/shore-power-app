@@ -405,9 +405,7 @@ if st.session_state.show_analysis:
             st.markdown("### 📌 Eklenmiş Kullanıcı Parametreleri")
             st.dataframe(user_param_df)
 
-    if st.button("⬅️ Use Case Seçimine Geri Dön"):
-        st.session_state.show_analysis = False
-        st.rerun()
+    
 
 
         # 👤 User-defined parameters section
