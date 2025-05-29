@@ -446,8 +446,7 @@ if st.session_state.show_analysis:
                 user_param_df = pd.DataFrame(st.session_state.user_params)
                 st.dataframe(user_param_df)
 
-    	except Exception as e:
-        	st.error(f"❌ Error loading parameter definitions: {e}")
+    	
 	
     
 
