@@ -236,8 +236,7 @@ if st.session_state.show_analysis:
 if st.session_state.get("show_analysis", False):
     st.markdown("---")
     st.markdown("## ⚙️ Parameter Selection Table")
-
-    try:
+	try:
         param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
         param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
 
@@ -346,6 +345,8 @@ if st.session_state.get("show_analysis", False):
 
     except Exception as e:
         st.error(f"❌ Error loading parameter definitions: {e}")
+	
+    
 
 
 
