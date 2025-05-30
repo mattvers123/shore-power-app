@@ -255,68 +255,61 @@ try:
     param_config_df["Selection"] = False
 
     # 👇👇👇 sadece görünürlüğü kontrol eden blok 👇👇👇
-	if st.session_state.get("show_analysis", False):
-	    st.title("⚙️ Compatibility Analysis Panel")
-	    st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specifications.")
-	
-	    # CSS styles for table and form appearance
-	    st.markdown("""
-	        <style>
-	        .stForm .block-container {
-	            padding-top: 0rem;
-	            padding-bottom: 0rem;
-	        }
-	        div[data-testid="column"] {
-	            padding-top: 0.15rem;
-	            padding-bottom: 0.15rem;
-	            border-bottom: 1px solid #ddd;
-	        }
-	        .stRadio > div {
-	            gap: 4px !important;
-	        }
-	        th, td {
-	            padding: 2px 6px !important;
-	        }
-	        </style>
-	    """, unsafe_allow_html=True)
-	
-	    # 📊 Move Parameter Selection Table to the top
-	    st.markdown("## ⚙️ Parameter Selection Table")
-	
-	    with st.form("parameter_form"):
-	        headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
-	        header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-	        for col, header in zip(header_cols, headers):
-	            col.markdown(f"**{header}**")
-	
-	        for idx, row in param_config_df.iterrows():
-	            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
-	            for i, key in zip(range(7), list(columns_to_keep.values())):
-	                cols[i].markdown(str(row[key]))
-	
-	            editable = str(row["Editable"]).strip().lower() == "true"
-	            if editable:
-	                choice = cols[7].checkbox("", key=f"checkbox_{idx}")
-	                param_config_df.at[idx, "Selection"] = choice
-	            else:
-	                cols[7].markdown("🔒")
-	
-	        submitted = st.form_submit_button("✅ Show Selected Parameters")
-	
-	    if submitted:
-	        selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
-	        if not selected_df.empty:
-	            st.markdown("### ✅ Selected Parameters")
-	            st.dataframe(selected_df.style.set_properties(**{
-	                'text-align': 'left',
-	                'border': '1px solid lightgray'
-	            }))
-	        else:
-	            st.info("No parameters were selected.")
+    if st.session_state.get("show_analysis", False):
 
-    # ✅ The rest of the Compatibility Analysis page continues here...
-    # (e.g., ship type selection, demand profiles, compatibility scoring, etc.)
+        # CSS: Satır aralıklarını azalt
+        st.markdown("""
+            <style>
+            .stForm .block-container {
+                padding-top: 0rem;
+                padding-bottom: 0rem;
+            }
+            div[data-testid="column"] {
+                padding-top: 0.15rem;
+                padding-bottom: 0.15rem;
+                border-bottom: 1px solid #ddd;
+            }
+            .stRadio > div {
+                gap: 4px !important;
+            }
+            th, td {
+                padding: 2px 6px !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
 
+        st.markdown("## ⚙️ Parameter Selection Table")
+
+        with st.form("parameter_form"):
+            headers = ["Parameter ID", "Name", "Description", "Type", "Default Weight", "Editable", "Parameter Type", "Include?"]
+            header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+            for col, header in zip(header_cols, headers):
+                col.markdown(f"**{header}**")
+
+            for idx, row in param_config_df.iterrows():
+                cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+                for i, key in zip(range(7), list(columns_to_keep.values())):
+                    cols[i].markdown(str(row[key]))
+
+                editable = str(row["Editable"]).strip().lower() == "true"
+                if editable:
+                    choice = cols[7].checkbox("", key=f"checkbox_{idx}")
+                    param_config_df.at[idx, "Selection"] = choice
+                else:
+                    cols[7].markdown("🔒")
+
+            submitted = st.form_submit_button("✅ Show Selected Parameters")
+
+        if submitted:
+                selected_df = param_config_df[param_config_df["Selection"] == True].drop(columns=["Selection"])
+                if not selected_df.empty:
+                        st.markdown("### ✅ Selected Parameters")
+                        st.dataframe(selected_df.style.set_properties(**{
+                                'text-align': 'left',
+                                'border': '1px solid lightgray'
+                }))
+                else:
+                        st.info("No parameters were selected.")
 
 	# ⬇️⬇️⬇️ BURADAN SONRA YENİ KODU EKLE ⬇️⬇️⬇️
 
