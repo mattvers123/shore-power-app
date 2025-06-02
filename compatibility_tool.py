@@ -9,6 +9,46 @@ import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+@st.cache_data(ttl=600)  # 10 dakika cache
+def load_param_config():
+    spreadsheet = client.open("Bluebarge_Comp_Texts")
+    param_config_sheet = spreadsheet.worksheet("Analysis")
+    param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+    return param_config_df
+
+
+@st.cache_data(ttl=600)
+def load_ship_demand():
+    spreadsheet = client.open("Bluebarge_Comp_Texts")
+    ship_sheet = spreadsheet.worksheet("Ship Demand")
+    ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+    return ship_demand_df
+
+
+import requests
+
+
+def get_weather_data(lat, lon):
+    api_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wave_height"
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+
+columns_to_keep = {
+    "Parameter ID": "Parameter ID",
+    "Name": "Name",
+    "Description": "Description",
+    "Type": "Type",
+    "Default Weight": "Default Weight",
+    "Editable": "Editable",
+    "Param Type": "Parameter Type",
+}
+
+
 st.set_page_config(layout="wide")
 
 with open("bluebarge-logo-white.svg", "r") as f:
@@ -53,21 +93,25 @@ if st.session_state.show_analysis:
     st.title("⚙️ Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.")
     try:
-        param_config_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Analysis")
-        param_config_df = pd.DataFrame(param_config_sheet.get_all_records())
+        # Load param_config_df into session state
+        if "param_config_df" not in st.session_state:
+            param_config_df = load_param_config()
 
-        columns_to_keep = {
-            "Parameter ID": "Parameter ID",
-            "Name": "Name",
-            "Description": "Description",
-            "Type": "Type",
-            "Default Weight": "Default Weight",
-            "Editable": "Editable",
-            "Param Type": "Parameter Type",
-        }
-        param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
-        param_config_df.rename(columns=columns_to_keep, inplace=True)
-        param_config_df["Selection"] = False
+            columns_to_keep = {
+                "Parameter ID": "Parameter ID",
+                "Name": "Name",
+                "Description": "Description",
+                "Type": "Type",
+                "Default Weight": "Default Weight",
+                "Editable": "Editable",
+                "Param Type": "Parameter Type",
+            }
+            param_config_df = param_config_df[list(columns_to_keep.keys())].copy()
+            param_config_df.rename(columns=columns_to_keep, inplace=True)
+            param_config_df["Selection"] = False
+            st.session_state.param_config_df = param_config_df
+        else:
+            param_config_df = st.session_state.param_config_df
 
         # 👇👇👇 sadece görünürlüğü kontrol eden blok 👇👇👇
         if st.session_state.get("show_analysis", False):
@@ -212,8 +256,7 @@ if st.session_state.show_analysis:
 
     # 1️⃣ 🚢 Ship Type Selector
     try:
-        ship_sheet = client.open("Bluebarge_Comp_Texts").worksheet("Ship Demand")
-        ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
+        ship_demand_df = load_ship_demand()
         ship_type = st.selectbox(
             "Select Ship Type", ship_demand_df["ship_type"].unique()
         )
@@ -396,25 +439,23 @@ if st.session_state.show_analysis:
             },
         ]
 
-        # Sadece Must parametrelerini getir
-        score_data = []
-
         # Normalize parameter names
         param_config_df["Name_clean"] = param_config_df["Name"].str.lower().str.strip()
 
-        # Must olanları filtrele
+        # Ensure 'Selection' column exists
+        if "Selection" not in param_config_df.columns:
+            param_config_df["Selection"] = False
+
+        # Filter Must parameters
         must_params = param_config_df[
             param_config_df["Parameter Type"].str.lower().str.strip() == "must"
         ]
 
-        # Must parametreleri ekle
+        # Must Have tabloları ve seçimler
+        score_data = []
         for _, row in must_params.iterrows():
             factor_name = row["Name"]
-            score_data.append(
-                {
-                    "Factor": factor_name,
-                }
-            )
+            score_data.append({"Factor": factor_name})
 
         headers = ["Factor", "Must Have?"]
         weights = [2, 1]
@@ -432,10 +473,41 @@ if st.session_state.show_analysis:
 
         st.session_state.must_have_selections = new_selections
 
+        # After Must Have selection, check if all Must Have parameters are selected
         if all(new_selections) and len(new_selections) > 0:
             st.success(
                 "✅ All Must Have parameters are fulfilled! Additional parameters displayed."
             )
+
+            st.markdown("### 🔍 Confirm Selected Parameters")
+
+            include_selected = param_config_df[
+                (param_config_df["Selection"] == True)
+                & (param_config_df["Parameter Type"].str.lower().str.strip() != "must")
+            ]
+
+            if not include_selected.empty:
+                header_cols = st.columns(
+                    [2, 1]
+                )  # Kolonlar: Parametre Adı ve Tik Kutusu
+                header_cols[0].markdown("**Parameter**")
+                header_cols[1].markdown("**Include?**")
+
+                include_choices = []
+                for i, (_, row) in enumerate(include_selected.iterrows()):
+                    row_cols = st.columns([2, 1])
+                    row_cols[0].markdown(row["Name"])
+                    include_choice = row_cols[1].checkbox(
+                        "", value=False, key=f"include_confirm_{i}"
+                    )
+                    include_choices.append(include_choice)
+
+                confirm = st.button("✅ Confirm")
+                if confirm:
+                    st.success("Selection confirmed!")
+            else:
+                st.info("No additional parameters have been selected.")
+
         else:
             st.warning("⚠️ Not all Must Have parameters are fulfilled!")
 
