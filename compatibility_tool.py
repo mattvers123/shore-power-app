@@ -170,8 +170,12 @@ if st.session_state.show_analysis:
                         "Parameter Value", value=0.0, step=0.1, format="%.2f"
                     )
                 with col3:
-                    weight_input = st.slider(
-                        "Weight", min_value=0.0, max_value=1.0, value=0.5
+                    weight_input = st.number_input(
+                        "Weight (0-1)",
+                        min_value=0.0,
+                        max_value=1.0,
+                        step=0.01,
+                        format="%.2f",
                     )
 
                 submitted = st.form_submit_button("➕ Add Parameter")
@@ -334,12 +338,15 @@ if st.session_state.show_analysis:
             "voltage_levels": ["LV"],
         }
 
-        # Manual input for soft parameter
-        user_operational_fit = st.slider(
-            "Operational Fit (0 = poor, 1 = perfect)", 0.0, 1.0, 0.7
+        user_operational_fit = st.number_input(
+            "Operational Fit (0 = poor, 1 = perfect)",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.7,
+            step=0.01,
+            format="%.2f",
         )
 
-        # Calculate scores
         def scaled_score(barge_val, required_val):
             if required_val == 0:
                 return 0
@@ -348,7 +355,6 @@ if st.session_state.show_analysis:
         def binary_score(barge_val, required_val):
             return 100 if required_val in barge_val else 0
 
-        # Match scoring
         score_data = [
             {
                 "Factor": "Power Capacity",
@@ -390,30 +396,48 @@ if st.session_state.show_analysis:
             },
         ]
 
-        score_df = pd.DataFrame(score_data)
-        st.table(score_df)
+        # Sadece Must parametrelerini getir
+        score_data = []
 
-        # ⚡ Force total failure if HV/LV mismatch
-        hv_lv_score = score_df.loc[
-            score_df["Factor"] == "HV/LV Match", "Match (%)"
-        ].values[0]
+        # Normalize parameter names
+        param_config_df["Name_clean"] = param_config_df["Name"].str.lower().str.strip()
 
-        if hv_lv_score == 0:
-            total_score = 0
-            st.error(
-                "❌ Critical: Voltage mismatch (HV/LV) detected. Barge not compatible!"
+        # Must olanları filtrele
+        must_params = param_config_df[
+            param_config_df["Parameter Type"].str.lower().str.strip() == "must"
+        ]
+
+        # Must parametreleri ekle
+        for _, row in must_params.iterrows():
+            factor_name = row["Name"]
+            score_data.append(
+                {
+                    "Factor": factor_name,
+                }
+            )
+
+        headers = ["Factor", "Must Have?"]
+        weights = [2, 1]
+
+        header_cols = st.columns(weights)
+        for col, header in zip(header_cols, headers):
+            col.markdown(f"**{header}**")
+
+        new_selections = []
+        for i, row in enumerate(score_data):
+            row_cols = st.columns(weights)
+            row_cols[0].markdown(f"{row['Factor']}")
+            checkbox_value = row_cols[1].checkbox("", value=False, key=f"must_have_{i}")
+            new_selections.append(checkbox_value)
+
+        st.session_state.must_have_selections = new_selections
+
+        if all(new_selections) and len(new_selections) > 0:
+            st.success(
+                "✅ All Must Have parameters are fulfilled! Additional parameters displayed."
             )
         else:
-            total_score = score_df["Match (%)"].mean()
-
-        # Total weighted score (simple equal weight for now)
-
-        if total_score >= 80:
-            st.success(f"✅ **Total Compatibility Score: {total_score:.1f} / 100**")
-        else:
-            st.error(
-                f"⚠️ **Total Compatibility Score: {total_score:.1f} / 100 — Needs Attention!**"
-            )
+            st.warning("⚠️ Not all Must Have parameters are fulfilled!")
 
     # --- Load editable parameters from Google Sheet --
 
