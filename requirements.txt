@@ -8,3 +8,4 @@ requests
 pytz
 timezonefinder
 folium
+streamlit_folium
