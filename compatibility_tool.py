@@ -9,6 +9,8 @@ import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
+import folium
+from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 from timezonefinder import TimezoneFinder
 import pytz
