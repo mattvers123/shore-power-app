@@ -8,6 +8,12 @@ import json
 import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
+import folium
+from streamlit_folium import st_folium
+from datetime import datetime, timedelta
+from timezonefinder import TimezoneFinder
+import pytz
 
 
 @st.cache_data(ttl=600)  # 10 dakika cache
@@ -24,18 +30,6 @@ def load_ship_demand():
     ship_sheet = spreadsheet.worksheet("Ship Demand")
     ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
     return ship_demand_df
-
-
-import requests
-
-
-def get_weather_data(lat, lon):
-    api_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wind_speed_10m,wave_height"
-    response = requests.get(api_url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
 
 
 columns_to_keep = {
@@ -56,25 +50,23 @@ with open("bluebarge-logo-white.svg", "r") as f:
 
 st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
 
-from google.oauth2.service_account import Credentials
-import gspread
+# Step 1: Load the service account JSON from secrets
+gcp_secrets = st.secrets["gcp_service_account"]
 
-SERVICE_ACCOUNT_FILE = (
-    r"C:\Users\l\Desktop\shore-power-app-main\.streamlit\service_account.json"
-)
+# Step 2: Save to a temporary JSON file
+with tempfile.NamedTemporaryFile(mode="w",delete=False, suffix=".json") as tmp:
+    gcp_secrets = {k: v for k, v in st.secrets["gcp_service_account"].items()}
+    json.dump(dict(st.secrets["gcp_service_account"]), tmp)
+    tmp_path = tmp.name
 
-SCOPES = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive",
-]
-
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+# Setup Google Sheets connection
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name(tmp_path, scope)
 client = gspread.authorize(creds)
 
-sheet = client.open("Bluebarge_Comp_Texts").sheet1
+# Open the sheet
+sheet = client.open("Bluebarge_Comp_Texts").sheet1  # or .worksheet("Sheet1")
 data = pd.DataFrame(sheet.get_all_records())
-
-print("✅ Google Sheets bağlantısı başarılı!")
 
 # Sidebar inputs
 
@@ -253,6 +245,107 @@ if st.session_state.show_analysis:
 
     except Exception as e:
         st.error(f"❌ Error loading parameter definitions: {e}")
+
+    st.title("🌊 Real-Time Marine and Weather Data (Local Time Accurate)")
+
+    m = folium.Map(location=[41.0082, 28.9784], zoom_start=6)
+    m.add_child(folium.LatLngPopup())
+    map_data = st_folium(m, width=700, height=500)
+
+    tf = TimezoneFinder()
+
+    selected_lat = None
+    selected_lon = None
+
+    if map_data and map_data.get("last_clicked"):
+        selected_lat = map_data["last_clicked"]["lat"]
+        selected_lon = map_data["last_clicked"]["lng"]
+        st.success(f"Selected Coordinates: {selected_lat:.4f}, {selected_lon:.4f}")
+
+    if selected_lat and selected_lon:
+        if st.button("✅ Confirm and Fetch Data"):
+            timezone_str = tf.timezone_at(lng=selected_lon, lat=selected_lat)
+            if not timezone_str:
+                timezone_str = "UTC"
+            local_tz = pytz.timezone(timezone_str)
+
+            marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={selected_lat}&longitude={selected_lon}&hourly=wave_height"
+            marine_response = requests.get(marine_url)
+
+            weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={selected_lat}&longitude={selected_lon}&hourly=wind_speed_10m"
+            weather_response = requests.get(weather_url)
+
+            if (
+                marine_response.status_code == 200
+                and weather_response.status_code == 200
+            ):
+                marine_data = marine_response.json()
+                weather_data = weather_response.json()
+
+                try:
+                    now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
+
+                    # Marine Data
+                    wave_times = [
+                        datetime.fromisoformat(t).replace(tzinfo=pytz.utc)
+                        for t in marine_data["hourly"]["time"]
+                    ]
+                    wave_values = marine_data["hourly"]["wave_height"]
+                    wave_closest = [
+                        (t, v) for t, v in zip(wave_times, wave_values) if t <= now_utc
+                    ]
+                    if wave_closest:
+                        latest_wave_time_utc, latest_wave_value = wave_closest[-1]
+                        latest_wave_time_local = latest_wave_time_utc.astimezone(
+                            local_tz
+                        ).strftime("%Y-%m-%d %H:%M")
+                    else:
+                        latest_wave_value = None
+                        latest_wave_time_local = "N/A"
+
+                    # Weather Data
+                    wind_times = [
+                        datetime.fromisoformat(t).replace(tzinfo=pytz.utc)
+                        for t in weather_data["hourly"]["time"]
+                    ]
+                    wind_values = weather_data["hourly"]["wind_speed_10m"]
+                    wind_closest = [
+                        (t, v) for t, v in zip(wind_times, wind_values) if t <= now_utc
+                    ]
+                    if wind_closest:
+                        latest_wind_time_utc, latest_wind_value = wind_closest[-1]
+                        latest_wind_time_local = latest_wind_time_utc.astimezone(
+                            local_tz
+                        ).strftime("%Y-%m-%d %H:%M")
+                    else:
+                        latest_wind_value = None
+                        latest_wind_time_local = "N/A"
+
+                    # Display
+                    if latest_wave_value is not None:
+                        st.markdown(
+                            f"### 🌊 Wave Height: `{latest_wave_value} m` (Local Time: {latest_wave_time_local} - {timezone_str})"
+                        )
+                    else:
+                        st.warning(
+                            "⚠️ No wave height data available for the selected location and time."
+                        )
+
+                    if latest_wind_value is not None:
+                        st.markdown(
+                            f"### 💨 Wind Speed: `{latest_wind_value} km/h` (Local Time: {latest_wind_time_local} - {timezone_str})"
+                        )
+                    else:
+                        st.warning(
+                            "⚠️ No wind speed data available for the selected location and time."
+                        )
+
+                except Exception as e:
+                    st.error(f"❌ Data processing failed: {e}")
+            else:
+                st.error("❌ Failed to fetch data from APIs.")
+    else:
+        st.info("Please click a location on the map to proceed.")
 
     # 1️⃣ 🚢 Ship Type Selector
     try:
