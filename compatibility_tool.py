@@ -16,6 +16,21 @@ from timezonefinder import TimezoneFinder
 import pytz
 
 
+def compute_score_contribution(required, provided, weight):
+    if required == 0:
+        return 0.0
+    ratio = min(provided / required, 1.0)
+    return round(ratio * weight, 4)
+
+
+@st.cache_data(ttl=600)
+def load_equipment_data():
+    spreadsheet = client.open("Bluebarge_Comp_Texts")
+    equipment_sheet = spreadsheet.worksheet("Equipment List")
+    equipment_data = pd.DataFrame(equipment_sheet.get_all_records())
+    return equipment_data
+
+
 @st.cache_data(ttl=600)  # 10 dakika cache
 def load_param_config():
     spreadsheet = client.open("Bluebarge_Comp_Texts")
@@ -30,6 +45,15 @@ def load_ship_demand():
     ship_sheet = spreadsheet.worksheet("Ship Demand")
     ship_demand_df = pd.DataFrame(ship_sheet.get_all_records())
     return ship_demand_df
+
+
+@st.cache_data(ttl=600)
+def load_weather_thresholds():
+    spreadsheet = client.open("Bluebarge_Comp_Texts")
+    weather_sheet = spreadsheet.worksheet("Weather Thresholds")
+    df = pd.DataFrame(weather_sheet.get_all_records())
+    df.set_index("Parameter", inplace=True)
+    return df
 
 
 columns_to_keep = {
@@ -50,6 +74,9 @@ with open("bluebarge-logo-white.svg", "r") as f:
 
 st.sidebar.markdown(svg_logo, unsafe_allow_html=True)
 
+from google.oauth2.service_account import Credentials
+import gspread
+
 # Step 1: Load the service account JSON from secrets
 gcp_secrets = st.secrets["gcp_service_account"]
 
@@ -67,6 +94,8 @@ client = gspread.authorize(creds)
 # Open the sheet
 sheet = client.open("Bluebarge_Comp_Texts").sheet1  # or .worksheet("Sheet1")
 data = pd.DataFrame(sheet.get_all_records())
+
+print("✅ Google Sheets bağlantısı başarılı!")
 
 # Sidebar inputs
 
@@ -167,6 +196,11 @@ if st.session_state.show_analysis:
                 selected_df = param_config_df[
                     param_config_df["Selection"] == True
                 ].drop(columns=["Selection"])
+                has_user_params = (
+                    "user_params" in st.session_state
+                    and len(st.session_state.user_params) > 0
+                )
+
                 if not selected_df.empty:
                     st.markdown("### ✅ Selected Parameters")
                     st.dataframe(
@@ -174,10 +208,22 @@ if st.session_state.show_analysis:
                             **{"text-align": "left", "border": "1px solid lightgray"}
                         )
                     )
+
+                    total_weight = selected_df["Default Weight"].sum()
+                    if total_weight < 1.0:
+                        st.warning(
+                            f"⚠️ Selected parameters' total weight is **{total_weight:.2f}**, which is less than required minimum (1.0). Please adjust your selections."
+                        )
+                    else:
+                        st.success(
+                            f"✅ Selected parameters' total weight is **{total_weight:.2f}**. You may proceed."
+                        )
+
+                elif has_user_params:
+                    st.success("✅ Custom parameters have been added successfully.")
+
                 else:
                     st.info("No parameters were selected.")
-
-            # ⬇️⬇️⬇️ BURADAN SONRA YENİ KODU EKLE ⬇️⬇️⬇️
 
             # 👤 User-defined parameters section
             st.markdown("## ➕ User-defined Parameters")
@@ -226,8 +272,15 @@ if st.session_state.show_analysis:
 
             if st.session_state.user_params:
                 st.markdown("### 📌 Added Custom Parameters:")
-                user_param_df = pd.DataFrame(st.session_state.user_params)
-                st.dataframe(user_param_df)
+
+                for idx, param in enumerate(st.session_state.user_params):
+                    cols = st.columns([3, 2, 2, 1])
+                    cols[0].markdown(f"**{param['Name']}**")
+                    cols[1].markdown(f"{param['Value']}")
+                    cols[2].markdown(f"{param['Weight']}")
+                    if cols[3].button("❌", key=f"remove_user_param_{idx}"):
+                        st.session_state.user_params.pop(idx)
+                        st.experimental_rerun()
 
             if submitted:
                 selected_df = param_config_df[
@@ -248,9 +301,30 @@ if st.session_state.show_analysis:
 
     st.title("🌊 Real-Time Marine and Weather Data (Local Time Accurate)")
 
+    st.markdown(
+        """
+        <style>
+        .main > div {
+            padding-bottom: 0rem !important;
+        }
+        .element-container:has(.folium-map) {
+            margin-bottom: -80px !important;
+            padding-bottom: 0px !important;
+        }
+        iframe {
+            height: 300px !important;
+            margin: 0 auto !important;
+            display: block;
+            padding: 0px !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     m = folium.Map(location=[41.0082, 28.9784], zoom_start=6)
     m.add_child(folium.LatLngPopup())
-    map_data = st_folium(m, width=700, height=500)
+    map_data = st_folium(m, width=700, height=300)
 
     tf = TimezoneFinder()
 
@@ -260,7 +334,13 @@ if st.session_state.show_analysis:
     if map_data and map_data.get("last_clicked"):
         selected_lat = map_data["last_clicked"]["lat"]
         selected_lon = map_data["last_clicked"]["lng"]
+        st.session_state["selected_lat"] = selected_lat
+        st.session_state["selected_lon"] = selected_lon
         st.success(f"Selected Coordinates: {selected_lat:.4f}, {selected_lon:.4f}")
+
+    # Kullanıcı form submit ettikten sonra da koordinatlar hatırlansın:
+    selected_lat = st.session_state.get("selected_lat")
+    selected_lon = st.session_state.get("selected_lon")
 
     if selected_lat and selected_lon:
         if st.button("✅ Confirm and Fetch Data"):
@@ -340,6 +420,55 @@ if st.session_state.show_analysis:
                             "⚠️ No wind speed data available for the selected location and time."
                         )
 
+                    try:
+                        weather_thresholds = load_weather_thresholds()
+
+                        weather_results = []
+
+                        # Wave karşılaştırması
+                        wave_threshold = weather_thresholds.loc["wave_height"][
+                            "Threshold"
+                        ]
+                        wave_status = (
+                            "✅ Pass"
+                            if latest_wave_value <= wave_threshold
+                            else "❌ Fail"
+                        )
+                        weather_results.append(
+                            {
+                                "Parameter": "Wave Height",
+                                "Value": f"{latest_wave_value:.2f} m",
+                                "Threshold": f"{wave_threshold:.2f} m",
+                                "Result": wave_status,
+                            }
+                        )
+
+                        # Wind karşılaştırması
+                        wind_threshold = weather_thresholds.loc["wind_speed"][
+                            "Threshold"
+                        ]
+                        wind_status = (
+                            "✅ Pass"
+                            if latest_wind_value <= wind_threshold
+                            else "❌ Fail"
+                        )
+                        weather_results.append(
+                            {
+                                "Parameter": "Wind Speed",
+                                "Value": f"{latest_wind_value:.2f} km/h",
+                                "Threshold": f"{wind_threshold:.2f} km/h",
+                                "Result": wind_status,
+                            }
+                        )
+
+                        # Sonuçları göster
+                        weather_df = pd.DataFrame(weather_results)
+                        st.markdown("### 🌡️ Weather Compliance Check")
+                        st.table(weather_df)
+
+                    except Exception as e:
+                        st.error(f"❌ Weather compliance comparison failed: {e}")
+
                 except Exception as e:
                     st.error(f"❌ Data processing failed: {e}")
             else:
@@ -413,17 +542,20 @@ if st.session_state.show_analysis:
 
         # 🚩 Regulatory Compliance Declaration
         # st.markdown("### 📝 Regulatory Compliance Declaration")
-        st.markdown(
-            "<h6>📝 Regulatory Compliance Declaration</h5>", unsafe_allow_html=True
-        )
-        regulation_ack = st.checkbox(
-            "Confirm: Vessel is over 5000 GT **and** will stay more than 2 hours at port (Mandatory Shore Power Connection applies)"
+        regulation_choice = st.radio(
+            "📌 Is this vessel over 5000 GT **and** will it stay more than 2 hours at the port? (Mandatory shore power connection applies)",
+            ("Yes", "No"),
+            index=None,
         )
 
-        if regulation_ack:
-            st.success("⚠️ **Mandatory Shore Power Connection applies.**")
+        if regulation_choice == "Yes":
+            st.success("✅ Mandatory shore power connection applies for this vessel.")
+        elif regulation_choice == "No":
+            st.warning("❌ Mandatory shore power connection does not apply.")
+            st.stop()
         else:
-            st.info("Shore power connection **not mandatory** .")
+            st.info("Please answer this question to proceed.")
+            st.stop()
 
         # Radio button to choose power/energy estimation method
         # Lookup HV/LV capabilities from voltage compatibility sheet
@@ -539,72 +671,179 @@ if st.session_state.show_analysis:
         if "Selection" not in param_config_df.columns:
             param_config_df["Selection"] = False
 
-        # Filter Must parameters
-        must_params = param_config_df[
-            param_config_df["Parameter Type"].str.lower().str.strip() == "must"
+    # --- Load editable parameters from Google Sheet --
+
+    equipment_df = load_equipment_data()
+
+    # 🚢⚓ Port and Ship Compatibility Matching
+    st.header("⚓ Port and Ship Equipment Compatibility")
+
+    available_ports = equipment_df["Port"].dropna().unique()
+    selected_port = st.selectbox("Select a Port", available_ports)
+
+    port_equipment = equipment_df[equipment_df["Port"] == selected_port].copy()
+
+    # GEMİ → PLUG eşleşmesi
+    shiptype_to_plugtype = {
+        "Bulk carrier": "General Cargo",
+        "Container ship": "Container",
+        "Container": "Container",
+        "Ro-Pax": "Ro-Pax",
+        "Cruise": "Cruise",
+        # gerekirse diğerleri de eklenebilir
+    }
+    expected_plug_type = shiptype_to_plugtype.get(ship_type, ship_type)
+
+    # 🧠 Her eşleşme sütununu tek tek kontrol et
+    port_equipment["Plug Match"] = (
+        port_equipment["Plug Type"].str.lower() == expected_plug_type.lower()
+    )
+    port_equipment["Barge Match"] = port_equipment["Barge Service"].str.lower() == "yes"
+    port_equipment["Voltage Match"] = (
+        port_equipment["Voltage Level"].str.upper() == uc_demand["required_voltage"]
+    )
+    port_equipment["Standard Match"] = (
+        port_equipment["Standard (IEC)"].str.upper() == uc_demand["required_standard"]
+    )
+
+    # ✅ Tüm kriterleri sağlayanları al
+    compatible_equipment = port_equipment[
+        port_equipment["Plug Match"]
+        & port_equipment["Barge Match"]
+        & port_equipment["Voltage Match"]
+        & port_equipment["Standard Match"]
+    ]
+
+    # 🖥️ Tam tabloyu göster
+    st.markdown(f"### 🏗️ Equipment at {selected_port}")
+    st.dataframe(
+        port_equipment[
+            [
+                "Type",
+                "Voltage Level",
+                "Plug Type",
+                "Standard (IEC)",
+                "Barge Service",
+                "Plug Match",
+                "Barge Match",
+                "Voltage Match",
+                "Standard Match",
+            ]
         ]
+    )
 
-        # Must Have tabloları ve seçimler
-        score_data = []
-        for _, row in must_params.iterrows():
-            factor_name = row["Name"]
-            score_data.append({"Factor": factor_name})
+    # 🔍 Sonuç
+    st.markdown("### 🔍 Compatibility Result")
 
-        headers = ["Factor", "Must Have?"]
-        weights = [2, 1]
+    if not compatible_equipment.empty:
+        st.success(
+            f"✅ `{ship_type}` is fully compatible with equipment at **{selected_port}**."
+        )
+        st.dataframe(
+            compatible_equipment[
+                ["Type", "Voltage Level", "Plug Type", "Standard (IEC)"]
+            ]
+        )
+    else:
+        st.error(
+            f"❌ No compatible equipment found at **{selected_port}** for ship type `{ship_type}`."
+        )
+        st.markdown("#### ❗ Mismatch Breakdown:")
+        for idx, row in port_equipment.iterrows():
+            reasons = []
+            if not row["Plug Match"]:
+                reasons.append(
+                    f"❌ Plug Type mismatch: Expected `{expected_plug_type}`, found `{row['Plug Type']}`"
+                )
+            if not row["Barge Match"]:
+                reasons.append("❌ Barge Service not available")
+            if not row["Voltage Match"]:
+                reasons.append(
+                    f"❌ Voltage mismatch: Expected `{uc_demand['required_voltage']}`, found `{row['Voltage Level']}`"
+                )
+            if not row["Standard Match"]:
+                reasons.append(
+                    f"❌ Standard mismatch: Expected `{uc_demand['required_standard']}`, found `{row['Standard (IEC)']}`"
+                )
+            if reasons:
+                st.markdown(f"**Equipment {idx + 1}:**")
+                for reason in reasons:
+                    st.markdown(f"- {reason}")
 
-        header_cols = st.columns(weights)
-        for col, header in zip(header_cols, headers):
-            col.markdown(f"**{header}**")
+    # 📊 Başlık
+    st.markdown("## 📊 Weighted Compatibility Score")
 
-        new_selections = []
-        for i, row in enumerate(score_data):
-            row_cols = st.columns(weights)
-            row_cols[0].markdown(f"{row['Factor']}")
-            checkbox_value = row_cols[1].checkbox("", value=False, key=f"must_have_{i}")
-            new_selections.append(checkbox_value)
+    scoring_rows = []
 
-        st.session_state.must_have_selections = new_selections
+    # 🔁 Seçilen parametreler üzerinden geç
+    for idx, row in param_config_df.iterrows():
+        if not row.get("Selection", False):
+            continue
 
-        # After Must Have selection, check if all Must Have parameters are selected
-        if all(new_selections) and len(new_selections) > 0:
-            st.success(
-                "✅ All Must Have parameters are fulfilled! Additional parameters displayed."
+        param_name = row["Name"].strip()
+        if not param_name:
+            continue
+
+        weight = float(row["Default Weight"])
+        name_key = param_name.lower()
+
+        # Gemiye ait otomatik değerleri çek (sadece Required)
+        if name_key == "power capacity match":
+            required = uc_demand.get("required_power_mw", 1.0)
+        elif name_key == "energy autonomy":
+            required = uc_demand.get("required_energy_mwh", 1.0)
+        elif name_key == "standards compliance":
+            required = 1.0 if uc_demand.get("required_standard") else 0.0
+        elif name_key == "vessel gross tonnage":
+            required = selected_ship.get("gt", 0)
+        elif name_key == "port power capacity":
+            required = uc_demand.get("required_power_mw", 1.0)
+        elif name_key == "port energy capacity":
+            required = uc_demand.get("required_energy_mwh", 1.0)
+        else:
+            required = st.number_input(
+                f"{param_name} - Required Value",
+                key=f"req_{param_name}",
+                min_value=0.0,
+                value=1.0,
             )
 
-            st.markdown("### 🔍 Confirm Selected Parameters")
+        # Barge değerini kullanıcı girer
+        provided = st.number_input(
+            f"{param_name} - Barge Value",
+            key=f"barge_{param_name}",
+            min_value=0.0,
+            value=1.0,
+        )
 
-            include_selected = param_config_df[
-                (param_config_df["Selection"] == True)
-                & (param_config_df["Parameter Type"].str.lower().str.strip() != "must")
-            ]
+        # 📐 Skor hesapla
+        score = compute_score_contribution(required, provided, weight)
 
-            if not include_selected.empty:
-                header_cols = st.columns(
-                    [2, 1]
-                )  # Kolonlar: Parametre Adı ve Tik Kutusu
-                header_cols[0].markdown("**Parameter**")
-                header_cols[1].markdown("**Include?**")
+        # 🧾 Satırı tabloya ekle
+        scoring_rows.append(
+            {
+                "Parameter": param_name,
+                "Required Value": round(required, 4),
+                "Barge Value": round(provided, 4),
+                "Weight": round(weight, 4),
+                "Score Contribution": score,
+            }
+        )
 
-                include_choices = []
-                for i, (_, row) in enumerate(include_selected.iterrows()):
-                    row_cols = st.columns([2, 1])
-                    row_cols[0].markdown(row["Name"])
-                    include_choice = row_cols[1].checkbox(
-                        "", value=False, key=f"include_confirm_{i}"
-                    )
-                    include_choices.append(include_choice)
+    # 📄 Skor tablosunu oluştur ve göster
+    score_df = pd.DataFrame(scoring_rows)
 
-                confirm = st.button("✅ Confirm")
-                if confirm:
-                    st.success("Selection confirmed!")
-            else:
-                st.info("No additional parameters have been selected.")
+    if not score_df.empty and "Score Contribution" in score_df.columns:
+        total_score = round(score_df["Score Contribution"].sum(), 4)
 
-        else:
-            st.warning("⚠️ Not all Must Have parameters are fulfilled!")
+        st.markdown("### 📋 Compatibility Score Table")
+        st.table(score_df)
 
-    # --- Load editable parameters from Google Sheet --
+        st.markdown(f"### ✅ Total Compatibility Score: `{total_score * 100:.1f} %`")
+    else:
+        st.warning(
+            "⚠️ No valid scoring data. Please select parameters and enter values."
+        )
 
 
 import streamlit as st
