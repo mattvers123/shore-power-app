@@ -111,7 +111,7 @@ if st.sidebar.button("🔍 Compatibility Analysis"):
 # ✅ Page routing
 if st.session_state.show_analysis:
 
-    st.title("⚙️ Compatibility Analysis Panel")
+    st.title(" Compatibility Analysis Panel")
     st.markdown("Compare ship-side demand, port capabilities, and BlueBARGE specs.")
     try:
         # Load param_config_df into session state
@@ -161,7 +161,7 @@ if st.session_state.show_analysis:
                 unsafe_allow_html=True,
             )
 
-            st.markdown("## ⚙️ Parameter Selection Table")
+            st.markdown("##  Parameter Selection Table")
 
             with st.form("parameter_form"):
                 headers = [
@@ -226,7 +226,7 @@ if st.session_state.show_analysis:
                     st.info("No parameters were selected.")
 
             # 👤 User-defined parameters section
-            st.markdown("## ➕ User-defined Parameters")
+            st.markdown("##  User-defined Parameters")
 
             user_param_container = st.container()
 
@@ -286,6 +286,7 @@ if st.session_state.show_analysis:
                 selected_df = param_config_df[
                     param_config_df["Selection"] == True
                 ].drop(columns=["Selection"])
+
                 if not selected_df.empty:
                     st.markdown("### ✅ Selected Parameters")
                     st.dataframe(
@@ -295,11 +296,16 @@ if st.session_state.show_analysis:
                     )
                 else:
                     st.info("No parameters were selected.")
+                    # 🔎 1. Must-Have Parametreleri Filtrele
+            must_df = param_config_df[
+                param_config_df["Parameter Type"].str.lower() == "must"
+            ].copy()
+            must_df.reset_index(drop=True, inplace=True)
 
     except Exception as e:
         st.error(f"❌ Error loading parameter definitions: {e}")
 
-    st.title("🌊 Real-Time Marine and Weather Data (Local Time Accurate)")
+    st.title(" Real-Time Marine and Weather Data (Local Time Accurate)")
 
     st.markdown(
         """
@@ -476,7 +482,7 @@ if st.session_state.show_analysis:
     else:
         st.info("Please click a location on the map to proceed.")
 
-    # 1️⃣ 🚢 Ship Type Selector
+    # 1️⃣  Ship Type Selector
     try:
         ship_demand_df = load_ship_demand()
         ship_type = st.selectbox(
@@ -541,7 +547,7 @@ if st.session_state.show_analysis:
         }
 
         # 🚩 Regulatory Compliance Declaration
-        # st.markdown("### 📝 Regulatory Compliance Declaration")
+        # st.markdown("###  Regulatory Compliance Declaration")
         regulation_choice = st.radio(
             "📌 Is this vessel over 5000 GT **and** will it stay more than 2 hours at the port? (Mandatory shore power connection applies)",
             ("Yes", "No"),
@@ -675,8 +681,8 @@ if st.session_state.show_analysis:
 
     equipment_df = load_equipment_data()
 
-    # 🚢⚓ Port and Ship Compatibility Matching
-    st.header("⚓ Port and Ship Equipment Compatibility")
+    #  Port and Ship Compatibility Matching
+    st.header(" Port and Ship Equipment Compatibility")
 
     available_ports = equipment_df["Port"].dropna().unique()
     selected_port = st.selectbox("Select a Port", available_ports)
@@ -694,7 +700,7 @@ if st.session_state.show_analysis:
     }
     expected_plug_type = shiptype_to_plugtype.get(ship_type, ship_type)
 
-    # 🧠 Her eşleşme sütununu tek tek kontrol et
+    #  Her eşleşme sütununu tek tek kontrol et
     port_equipment["Plug Match"] = (
         port_equipment["Plug Type"].str.lower() == expected_plug_type.lower()
     )
@@ -715,7 +721,7 @@ if st.session_state.show_analysis:
     ]
 
     # 🖥️ Tam tabloyu göster
-    st.markdown(f"### 🏗️ Equipment at {selected_port}")
+    st.markdown(f"###  Equipment at {selected_port}")
     st.dataframe(
         port_equipment[
             [
@@ -733,7 +739,7 @@ if st.session_state.show_analysis:
     )
 
     # 🔍 Sonuç
-    st.markdown("### 🔍 Compatibility Result")
+    st.markdown("###  Hard Parameter Check")
 
     if not compatible_equipment.empty:
         st.success(
@@ -744,6 +750,7 @@ if st.session_state.show_analysis:
                 ["Type", "Voltage Level", "Plug Type", "Standard (IEC)"]
             ]
         )
+
     else:
         st.error(
             f"❌ No compatible equipment found at **{selected_port}** for ship type `{ship_type}`."
@@ -769,81 +776,132 @@ if st.session_state.show_analysis:
                 st.markdown(f"**Equipment {idx + 1}:**")
                 for reason in reasons:
                     st.markdown(f"- {reason}")
+        st.stop()
 
-    # 📊 Başlık
-    st.markdown("## 📊 Weighted Compatibility Score")
+    # 🔽 MUST-HAVE PARAMETRE SEÇİMİ 🔽
+    st.markdown("### 🔒 Required Parameters (Must-Have)")
+    st.markdown("Please review and confirm all required parameters below.")
 
-    scoring_rows = []
+    must_df = param_config_df[
+        param_config_df["Parameter Type"].str.lower() == "must"
+    ].copy()
+    must_df.reset_index(drop=True, inplace=True)
 
-    # 🔁 Seçilen parametreler üzerinden geç
-    for idx, row in param_config_df.iterrows():
-        if not row.get("Selection", False):
-            continue
+    with st.form("must_have_form"):
+        headers = [
+            "Parameter ID",
+            "Name",
+            "Description",
+            "Type",
+            "Default Weight",
+            "Editable",
+            "Parameter Type",
+            "Include?",
+        ]
+        header_cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+        for col, header in zip(header_cols, headers):
+            col.markdown(f"**{header}**")
 
-        param_name = row["Name"].strip()
-        if not param_name:
-            continue
+        for idx, row in must_df.iterrows():
+            cols = st.columns([1, 2, 3, 1, 1, 1, 1, 1])
+            for i, key in zip(range(7), list(columns_to_keep.values())):
+                cols[i].markdown(str(row[key]))
 
-        weight = float(row["Default Weight"])
-        name_key = param_name.lower()
+            choice = cols[7].checkbox("", key=f"must_checkbox_{idx}")
+            must_df.at[idx, "Selection"] = choice
 
-        # Gemiye ait otomatik değerleri çek (sadece Required)
-        if name_key == "power capacity match":
-            required = uc_demand.get("required_power_mw", 1.0)
-        elif name_key == "energy autonomy":
-            required = uc_demand.get("required_energy_mwh", 1.0)
-        elif name_key == "standards compliance":
-            required = 1.0 if uc_demand.get("required_standard") else 0.0
-        elif name_key == "vessel gross tonnage":
-            required = selected_ship.get("gt", 0)
-        elif name_key == "port power capacity":
-            required = uc_demand.get("required_power_mw", 1.0)
-        elif name_key == "port energy capacity":
-            required = uc_demand.get("required_energy_mwh", 1.0)
+        must_submitted = st.form_submit_button("✅ Confirm Required Parameters")
+
+    # ✅ Eğer form gönderildiyse kontrol et
+    if must_submitted:
+        not_selected = must_df[must_df["Selection"] != True]
+        if not not_selected.empty:
+            missing_names = not_selected["Name"].tolist()
+            st.error(
+                f"❌ You must select all required parameters before proceeding: {', '.join(missing_names)}"
+            )
+            st.stop()
         else:
-            required = st.number_input(
-                f"{param_name} - Required Value",
-                key=f"req_{param_name}",
+            st.success("✅ All required parameters confirmed.")
+            show_weighted_compatibility_score = True
+    else:
+        show_weighted_compatibility_score = False
+
+    # ✅ MUST-HAVE tamamlandıysa bu bölüm çalışacak
+    if (
+        "show_weighted_compatibility_score" in locals()
+        and show_weighted_compatibility_score
+    ):
+
+        st.markdown("##  Weighted Compatibility Score")
+
+        scoring_rows = []
+
+        for idx, row in param_config_df.iterrows():
+            if not row.get("Selection", False):
+                continue
+
+            param_name = row["Name"].strip()
+            if not param_name:
+                continue
+
+            weight = float(row["Default Weight"])
+            name_key = param_name.lower()
+
+            if name_key == "power capacity match":
+                required = uc_demand.get("required_power_mw", 1.0)
+            elif name_key == "energy autonomy":
+                required = uc_demand.get("required_energy_mwh", 1.0)
+            elif name_key == "standards compliance":
+                required = 1.0 if uc_demand.get("required_standard") else 0.0
+            elif name_key == "vessel gross tonnage":
+                required = selected_ship.get("gt", 0)
+            elif name_key == "port power capacity":
+                required = uc_demand.get("required_power_mw", 1.0)
+            elif name_key == "port energy capacity":
+                required = uc_demand.get("required_energy_mwh", 1.0)
+            else:
+                required = st.number_input(
+                    f"{param_name} - Required Value",
+                    key=f"req_{param_name}",
+                    min_value=0.0,
+                    value=1.0,
+                )
+
+            provided = st.number_input(
+                f"{param_name} - Barge Value",
+                key=f"barge_{param_name}",
                 min_value=0.0,
                 value=1.0,
             )
 
-        # Barge değerini kullanıcı girer
-        provided = st.number_input(
-            f"{param_name} - Barge Value",
-            key=f"barge_{param_name}",
-            min_value=0.0,
-            value=1.0,
-        )
+            score = compute_score_contribution(required, provided, weight)
 
-        # 📐 Skor hesapla
-        score = compute_score_contribution(required, provided, weight)
+            scoring_rows.append(
+                {
+                    "Parameter": param_name,
+                    "Required Value": round(required, 4),
+                    "Barge Value": round(provided, 4),
+                    "Weight": round(weight, 4),
+                    "Score Contribution": score,
+                }
+            )
 
-        # 🧾 Satırı tabloya ekle
-        scoring_rows.append(
-            {
-                "Parameter": param_name,
-                "Required Value": round(required, 4),
-                "Barge Value": round(provided, 4),
-                "Weight": round(weight, 4),
-                "Score Contribution": score,
-            }
-        )
+        score_df = pd.DataFrame(scoring_rows)
 
-    # 📄 Skor tablosunu oluştur ve göster
-    score_df = pd.DataFrame(scoring_rows)
+        if not score_df.empty and "Score Contribution" in score_df.columns:
+            total_score = round(score_df["Score Contribution"].sum(), 4)
 
-    if not score_df.empty and "Score Contribution" in score_df.columns:
-        total_score = round(score_df["Score Contribution"].sum(), 4)
+            st.markdown("### 📋 Compatibility Score Table")
+            st.table(score_df)
 
-        st.markdown("### 📋 Compatibility Score Table")
-        st.table(score_df)
-
-        st.markdown(f"### ✅ Total Compatibility Score: `{total_score * 100:.1f} %`")
-    else:
-        st.warning(
-            "⚠️ No valid scoring data. Please select parameters and enter values."
-        )
+            st.markdown(
+                f"### ✅ Total Compatibility Score: `{total_score * 100:.1f} %`"
+            )
+        else:
+            st.warning(
+                "⚠️ No valid scoring data. Please select parameters and enter values."
+            )
 
 
 import streamlit as st
