@@ -612,15 +612,6 @@ if st.session_state.show_analysis:
             "voltage_levels": ["LV"],
         }
 
-        user_operational_fit = st.number_input(
-            "Operational Fit (0 = poor, 1 = perfect)",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.7,
-            step=0.01,
-            format="%.2f",
-        )
-
         def scaled_score(barge_val, required_val):
             if required_val == 0:
                 return 0
@@ -662,13 +653,14 @@ if st.session_state.show_analysis:
                 "Barge Value": ", ".join(barge["voltage_levels"]),
                 "UC Requirement": uc_demand["required_voltage"],
             },
-            {
-                "Factor": "Operational Fit (user-rated)",
-                "Match (%)": user_operational_fit * 100,
-                "Barge Value": f"{user_operational_fit:.2f}",
-                "UC Requirement": "User-defined",
-            },
         ]
+
+        score_df = pd.DataFrame(score_data)
+        st.markdown("### ⚙️ Compatibility Match Results")
+        st.table(score_df)
+
+        avg_score = round(score_df["Match (%)"].mean(), 2)
+        st.markdown(f"### ✅ Average Match Score: `{avg_score} %`")
 
         # Normalize parameter names
         param_config_df["Name_clean"] = param_config_df["Name"].str.lower().str.strip()
