@@ -827,10 +827,6 @@ if st.session_state.show_analysis:
 
         st.markdown("##  Weighted Compatibility Score")
 
-        st.write("DEBUG: UC Demand", uc_demand)
-        st.write("DEBUG: Selected Ship", selected_ship)
-
-
         scoring_rows = []
 
         for idx, row in param_config_df.iterrows():
@@ -865,16 +861,16 @@ if st.session_state.show_analysis:
                 )
 
 
-            barge_key = f"barge_{param_name}"
-            if barge_key not in st.session_state:
-                st.session_state[barge_key] = 1.0
+        barge_key = f"barge_{param_name}"
+        if barge_key not in st.session_state:
+            st.session_state[barge_key] = 1.0
 
-            provided = st.number_input(
-            f"{param_name} - Barge Value",
-            key=barge_key,
-            min_value=0.0,
-            value=st.session_state[barge_key],
-            )
+        provided = st.number_input(
+        f"{param_name} - Barge Value",
+        key=barge_key,
+        min_value=0.0,
+        value=st.session_state[barge_key],
+        )
 
 
             '''
