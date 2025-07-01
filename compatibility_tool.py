@@ -830,6 +830,10 @@ if st.session_state.show_analysis:
         scoring_rows = []
 
         for idx, row in param_config_df.iterrows():
+
+            param_id = row["Parameter ID"]
+            key = f"param_{param_id}"
+            
             if not row.get("Selection", False):
                 continue
 
