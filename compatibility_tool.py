@@ -853,9 +853,9 @@ if st.session_state.show_analysis:
             elif name_key == "vessel gross tonnage":
                 required = selected_ship.get("gt", 0)
             elif name_key == "port power capacity":
-                required = uc_demand.get("required_power_mw", 1.0)
+                required = uc_demand.get("required_power_mw", 5.0)
             elif name_key == "port energy capacity":
-                required = uc_demand.get("required_energy_mwh", 1.0)
+                required = uc_demand.get("required_energy_mwh", 45.0)
             else:
                 required = st.number_input(
                     f"{param_name} - Required Value",
