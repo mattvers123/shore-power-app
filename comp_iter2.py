@@ -879,9 +879,9 @@ if st.session_state.show_analysis:
                 min_value=0.0,
                 value=1.0,
             )
-            if param_name == "power capacity match":
+            if name_key == "power capacity match":
                 provided = 6.5  # or whatever barge value you want
-            elif param_name == "energy autonomy":
+            elif name_key == "energy autonomy":
                 provided = 30.0  # or your sample barge value
         
             score = compute_score_contribution(required, provided, weight)
