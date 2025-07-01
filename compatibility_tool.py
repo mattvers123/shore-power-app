@@ -827,6 +827,10 @@ if st.session_state.show_analysis:
 
         st.markdown("##  Weighted Compatibility Score")
 
+        st.write("DEBUG: UC Demand", uc_demand)
+        st.write("DEBUG: Selected Ship", selected_ship)
+
+
         scoring_rows = []
 
         for idx, row in param_config_df.iterrows():
