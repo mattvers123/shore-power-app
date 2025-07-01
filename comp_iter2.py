@@ -833,7 +833,16 @@ if st.session_state.show_analysis:
 
             param_id = row["Parameter ID"]
             key = f"param_{param_id}"
+
+            # Initialize checkbox state if not set
+            if key not in st.session_state:
+                st.session_state[key] = False
+
+            include = st.checkbox("Include?", value=st.session_state[key], key=key)
+            st.session_state[key] = include  # update state
+
             
+
             if not row.get("Selection", False):
                 continue
 
@@ -870,6 +879,10 @@ if st.session_state.show_analysis:
                 min_value=0.0,
                 value=1.0,
             )
+            if param_name == "power capacity match":
+                provided = 6.5  # or whatever barge value you want
+            elif param_name == "energy autonomy":
+                provided = 30.0  # or your sample barge value
         
             score = compute_score_contribution(required, provided, weight)
 
