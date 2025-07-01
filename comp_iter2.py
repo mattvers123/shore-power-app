@@ -603,6 +603,7 @@ if st.session_state.show_analysis:
         else:
             uc_demand["required_standard"] = None
 
+    """
     with st.expander("🧪 Try a Compatibility Match (Sample)", expanded=True):
 
         barge = {
@@ -656,12 +657,13 @@ if st.session_state.show_analysis:
         ]
 
         score_df = pd.DataFrame(score_data)
+        
         st.markdown("### ⚙️ Compatibility Match Results")
         st.table(score_df)
 
         avg_score = round(score_df["Match (%)"].mean(), 2)
         st.markdown(f"### ✅ Average Match Score: `{avg_score} %`")
-
+"""
         # Normalize parameter names
         param_config_df["Name_clean"] = param_config_df["Name"].str.lower().str.strip()
 
