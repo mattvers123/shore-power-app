@@ -193,37 +193,41 @@ if st.session_state.show_analysis:
                 submitted = st.form_submit_button("✅ Show Selected Parameters")
 
             if submitted:
-                selected_df = param_config_df[
-                    param_config_df["Selection"] == True
-                ].drop(columns=["Selection"])
-                has_user_params = (
-                    "user_params" in st.session_state
-                    and len(st.session_state.user_params) > 0
-                )
 
-                if not selected_df.empty:
-                    st.markdown("### ✅ Selected Parameters")
-                    st.dataframe(
-                        selected_df.style.set_properties(
-                            **{"text-align": "left", "border": "1px solid lightgray"}
-                        )
+                st.session_state["param_form_submitted"] = True
+
+                if st.session_state.get("param_form_submitted", False):
+                    selected_df = param_config_df[
+                        param_config_df["Selection"] == True
+                    ].drop(columns=["Selection"])
+                    has_user_params = (
+                        "user_params" in st.session_state
+                        and len(st.session_state.user_params) > 0
                     )
 
-                    total_weight = selected_df["Default Weight"].sum()
-                    if total_weight < 1.0:
-                        st.warning(
-                            f"⚠️ Selected parameters' total weight is **{total_weight:.2f}**, which is less than required minimum (1.0). Please adjust your selections."
+                    if not selected_df.empty:
+                        st.markdown("### ✅ Selected Parameters")
+                        st.dataframe(
+                            selected_df.style.set_properties(
+                                **{"text-align": "left", "border": "1px solid lightgray"}
+                            )
                         )
+
+                        total_weight = selected_df["Default Weight"].sum()
+                        if total_weight < 1.0:
+                            st.warning(
+                                f"⚠️ Selected parameters' total weight is **{total_weight:.2f}**, which is less than required minimum (1.0). Please adjust your selections."
+                            )
+                        else:
+                            st.success(
+                                f"✅ Selected parameters' total weight is **{total_weight:.2f}**. You may proceed."
+                            )
+
+                    elif has_user_params:
+                        st.success("✅ Custom parameters have been added successfully.")
+
                     else:
-                        st.success(
-                            f"✅ Selected parameters' total weight is **{total_weight:.2f}**. You may proceed."
-                        )
-
-                elif has_user_params:
-                    st.success("✅ Custom parameters have been added successfully.")
-
-                else:
-                    st.info("No parameters were selected.")
+                        st.info("No parameters were selected.")
 
             # 👤 User-defined parameters section
             st.markdown("##  User-defined Parameters")
