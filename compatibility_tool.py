@@ -845,9 +845,9 @@ if st.session_state.show_analysis:
             name_key = param_name.lower()
 
             if name_key == "power capacity match":
-                required = uc_demand.get("required_power_mw", 1.0)
+                required = uc_demand.get("required_power_mw", 5.0)
             elif name_key == "energy autonomy":
-                required = uc_demand.get("required_energy_mwh", 1.0)
+                required = uc_demand.get("required_energy_mwh", 45.0)
             elif name_key == "standards compliance":
                 required = 1.0 if uc_demand.get("required_standard") else 0.0
             elif name_key == "vessel gross tonnage":
