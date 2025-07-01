@@ -852,6 +852,23 @@ if st.session_state.show_analysis:
             weight = float(row["Default Weight"])
             name_key = param_name.lower()
 
+
+            # Set required values as before
+            if name_key == "power capacity match":
+                required = uc_demand.get("required_power_mw", 1.0)
+                provided = 6.5  # Override here
+            elif name_key == "energy autonomy":
+                required = uc_demand.get("required_energy_mwh", 1.0)
+                provided = 30.0  # Override here
+            else:
+                required = st.number_input(
+                f"{param_name} - Required Value", key=f"req_{param_name}", min_value=0.0, value=1.0
+                )
+                provided = st.number_input(
+                f"{param_name} - Barge Value", key=f"barge_{param_name}", min_value=0.0, value=1.0
+                )
+
+'''
             if name_key == "power capacity match":
                 required = uc_demand.get("required_power_mw", 1.0)
             elif name_key == "energy autonomy":
@@ -883,7 +900,7 @@ if st.session_state.show_analysis:
                 provided = 6.5  # or whatever barge value you want
             elif param_name == "energy autonomy":
                 provided = 30.0  # or your sample barge value
-        
+        '''
             score = compute_score_contribution(required, provided, weight)
 
             scoring_rows.append(
