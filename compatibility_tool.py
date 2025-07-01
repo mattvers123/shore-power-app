@@ -860,27 +860,13 @@ if st.session_state.show_analysis:
                     value=1.0,
                 )
 
-
-            barge_key = f"barge_{param_name}"
-            if barge_key not in st.session_state:
-                st.session_state[barge_key] = 1.0
-
-            provided = st.number_input(
-            f"{param_name} - Barge Value",
-            key=barge_key,
-            min_value=0.0,
-            value=st.session_state[barge_key],
-            )
-
-
-            '''
             provided = st.number_input(
                 f"{param_name} - Barge Value",
                 key=f"barge_{param_name}",
                 min_value=0.0,
                 value=1.0,
             )
-            '''
+        
             score = compute_score_contribution(required, provided, weight)
 
             scoring_rows.append(
